@@ -1,15 +1,32 @@
-from . import db
+import json
+import os
+
+DATA_FILE = "activities.json"
 
 class Activity:
-	__tablename__ = 'activities'
+    def __init__(self, id, name, size=None, distance_from_origin=None, cost=None, category=None):
+        self.id = id
+        self.name = name
+        self.size = size
+        self.distance_from_origin = distance_from_origin
+        self.cost = cost
+        self.category = category
 
-	id = db.Column(db.Integer, primary_key=True)
-	name = db.Column(db.String(100), nullable=False)
-	size = db.Column(db.String(50), nullable=True)
-	distance_from_origin = db.Column(db.Float, nullable=True)
-	cost = db.Column(db.Float, nullable=True)
-	category = db.Column(db.String(100), nullable=True)
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "size": self.size,
+            "distance_from_origin": self.distance_from_origin,
+            "cost": self.cost,
+            "category": self.category
+        }
+    def load_all():
+        with open(DATA_FILE, "") as f:
+
+    def save_all(activities):
+        with open(DATA_FILE, "") as f:
+  
 
 	def __str__(self):
-		return f"<Activity {self.id} {self.name}>"
-
+    return f"<Activity {self.id} {self.name}>"
