@@ -30,7 +30,7 @@ def explore() -> rx.Component:
             rx.hstack(
                 rx.input(placeholder="Search activities..."),
                 rx.select(
-                    ["All Categories", "Outdoor", "Food", "Arts", "Sports", "Other"],
+                    ["All Categories", "Outdoor", "Food", "Shopping", "Sports", "Other"],
                     placeholder="Category",
                 ),
                 rx.select(
