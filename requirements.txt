@@ -1,0 +1,5 @@
+reflex>=0.4.0
+sqlalchemy>=2.0.0
+httpx>=0.25.0
+python-dotenv>=1.0.0
+
