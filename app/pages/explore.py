@@ -1,6 +1,5 @@
-
 import reflex as rx
-from app.example_data import EXAMPLE_ACTIVITIES
+from app.state import State
 
 
 def activity_card(activity: dict) -> rx.Component:
@@ -27,21 +26,36 @@ def explore() -> rx.Component:
     return rx.box(
         rx.vstack(
             rx.heading("Explore Activities"),
+            rx.text(
+                "This list is coming from activities.json. "
+                "For the demo the filter controls are static."
+            ),
             rx.hstack(
-                rx.input(placeholder="Search activities..."),
+                rx.input(placeholder="Search activities...", width="40%"),
                 rx.select(
-                    ["All Categories", "Outdoor", "Food", "Shopping", "Sports", "Other"],
+                    ["All", "Outdoor", "Food", "Shopping", "Sports", "Other"],
                     placeholder="Category",
+                    width="20%",
                 ),
                 rx.select(
-                    ["Any Distance", "5 min", "15 min", "30 min"],
+                    ["Any", "5 min", "15 min", "30 min"],
                     placeholder="Distance",
+                    width="20%",
                 ),
             ),
             rx.grid(
-                rx.foreach(EXAMPLE_ACTIVITIES, activity_card),
-                columns="3",
+                rx.foreach(ActivityState.activities, activity_card),
+                columns=[1, 2, 3],
+                spacing="4",
+            ),
+            rx.link(
+                rx.button("Create Activity"),
+                href="/create",
+                align_self="flex-start",
+                margin_top="4",
             ),
             padding="8",
+            max_width="1000px",
+            margin_x="auto",
         ),
     )

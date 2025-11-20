@@ -1,32 +1,36 @@
-import json
-import os
+from sqlmodel import SQLModel, Field
+from typing import Optional
+from datetime import date, time, datetime
 
-DATA_FILE = "activities.json"
+from sqlmodel import SQLModel
 
-class Activity:
-    def __init__(self, id, name, size=None, distance_from_origin=None, cost=None, category=None):
-        self.id = id
-        self.name = name
-        self.size = size
-        self.distance_from_origin = distance_from_origin
-        self.cost = cost
-        self.category = category
+Base = SQLModel
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+    email: str
+    password_hash: str
+    is_admin: bool = False
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "size": self.size,
-            "distance_from_origin": self.distance_from_origin,
-            "cost": self.cost,
-            "category": self.category
-        }
-    def load_all():
-        with open(DATA_FILE, "") as f:
+    def check_password(self, password: str) -> bool:
+        return password == self.password_hash
 
-    def save_all(activities):
-        with open(DATA_FILE, "") as f:
-  
+class Activity(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    title: str
+    description: str | None = ""
+    date: date
+    time: time
+    location_name: str
+    latitude: float = 0.0
+    longitude: float = 0.0
+    max_participants: Optional[int] = None
+    creator_id: int
 
-	def __str__(self):
-    return f"<Activity {self.id} {self.name}>"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+class Participation(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int
+    activity_id: int
