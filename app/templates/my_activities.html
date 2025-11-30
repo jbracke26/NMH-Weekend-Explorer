@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}My Activities{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4">My Activities</h1>
+
+  <p class="text-muted">
+    This page shows activities you are hosting and activities you have signed up for. 
+  </p>
+
+  <!-- Hosted Activities -->
+  <h3 class="mt-4">Activities I am Hosting</h3>
+  <div class="row g-3">
+
+    <!-- Example Hosted Card -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Sunrise Hike to Crag Mountain</h5>
+          <h6 class="card-subtitle mb-2 text-muted">
+            March 12 at 7:00 AM · Crag Mountain Trailhead
+          </h6>
+          <p class="card-text">
+            Morning hike overlooking the valley. Great for beginners. And Kevin,
+          </p>
+
+          <p class="mb-1"><strong>Interest:</strong> 5 students</p>
+          <p class="mb-2">
+            <span class="badge bg-info">Host</span>
+            <span class="badge bg-success">Approved</span>
+          </p>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary">View details</button>
+            <button class="btn btn-sm btn-outline-secondary">Edit</button>
+            <button class="btn btn-sm btn-outline-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Taco Night at Gill Hall</h5>
+          <h6 class="card-subtitle mb-2 text-muted">
+            March 22 at 6:00 PM · Gill Hall Kitchen
+          </h6>
+          <p class="card-text">Make tacos together.</p>
+
+          <p class="mb-1"><strong>Interest:</strong> 12 students</p>
+          <p class="mb-2">
+            <span class="badge bg-info">Host</span>
+            <span class="badge bg-warning text-dark">Pending approval</span>
+          </p>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary">View details</button>
+            <button class="btn btn-sm btn-outline-secondary">Edit</button>
+            <button class="btn btn-sm btn-outline-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <h3 class="mt-5">Activities I Am Joining</h3>
+  <div class="row g-3">
+
+    <!-- Example Joined -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Northfield Coffee Walk</h5>
+          <h6 class="card-subtitle mb-2 text-muted">
+            March 18 at 3:30 PM · Downtown Northfield
+          </h6>
+          <p class="card-text">
+            Short walk downtown to get food.
+          </p>
+
+          <p class="mb-2">
+            <span class="badge bg-secondary">Joined</span>
+          </p>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary">View details</button>
+            <button class="btn btn-sm btn-outline-warning">Leave trip</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Another Joined Example -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Target Shopping Run</h5>
+          <h6 class="card-subtitle mb-2 text-muted">
+            March 25 at 4:00 PM · Greenfield Target
+          </h6>
+          <p class="card-text">
+            Quick run to Target to buy supplies.
+          </p>
+
+          <p class="mb-2">
+            <span class="badge bg-secondary">Joined</span>
+            <span class="badge bg-danger">Trip is full</span>
+          </p>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary">View details</button>
+            <button class="btn btn-sm btn-outline-warning">Leave trip</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

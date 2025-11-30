@@ -1,20 +1,13 @@
-from app import create_app, db
-from app.models import Activity
+import os
+import json
 
-app = create_app()
+DATA_FILE = "activities.json"
 
-with app.app_context():
-    db.create_all()
-    if not Activity.query.first():
-        Hiking = Activity(
-            name= 'Hiking Killington',
-            size='small',
-            distance_from_origin=5.2,
-            cost=0.0,
-            category='hiking'
-        )
-        db.session.add(Hiking)
-        db.session.commit()
-        print('Created activity')
-    else:
-        print('Activities already exist')
+def init_db():
+    if not os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "") as f:
+            json.dump([], f)
+
+if __name__ == "__main__":
+    init_db()
+    print("Initialized activities.json")
