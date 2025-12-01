@@ -1,5 +1,5 @@
-from pathlib import Path
 from app.models import Activity, load_activities, save_activities, DATA_FILE  # type: ignore
+
 
 EXAMPLE_ACTIVITIES = [
     Activity(
@@ -13,8 +13,9 @@ EXAMPLE_ACTIVITIES = [
         location="Home",
         distance="Varies",
         time="Saturday November 22nd",
-        max_participants=2000,
+        max_participants="2000",
         participants=["Henry", "Ethan", "Georgii", "Shun"],
+        creator_id=1,
     )
 ]
 
@@ -27,5 +28,6 @@ def ensure_seed_data() -> None:
 
     if not load_activities():
         save_activities(EXAMPLE_ACTIVITIES)
+
 
 ensure_seed_data()

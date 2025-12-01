@@ -1,36 +1,68 @@
-from sqlmodel import SQLModel, Field
-from typing import Optional
-from datetime import date, time, datetime
+import json
+from dataclasses import dataclass, asdict
+from pathlib import Path
+from typing import List, Optional
 
-from sqlmodel import SQLModel
+DATA_FILE = Path(__file__).with_name("activities.json")
 
-Base = SQLModel
-class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str
-    email: str
-    password_hash: str
-    is_admin: bool = False
 
-    def check_password(self, password: str) -> bool:
-        return password == self.password_hash
+def _read_json() -> list[dict]:
+    if not DATA_FILE.exists():
+        return []
+    try:
+        with DATA_FILE.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return []
 
-class Activity(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+
+def _write_json(data: list[dict]) -> None:
+    with DATA_FILE.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+
+@dataclass
+class Activity:
+    id: int
     title: str
-    description: str | None = ""
-    date: date
-    time: time
-    location_name: str
-    latitude: float = 0.0
-    longitude: float = 0.0
-    max_participants: Optional[int] = None
-    creator_id: int
+    description: str = ""
+    category: str = "Other"
+    location: str = ""
+    distance: str = ""
+    time: str = ""
+    max_participants: Optional[str] = None
+    participants: Optional[list[str]] = None
+    creator_id: Optional[int] = None
 
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    @staticmethod
+    def load_all() -> List["Activity"]:
+        raw_list = _read_json()
+        activities: List[Activity] = []
+        for raw in raw_list:
+            activities.append(
+                Activity(
+                    id=raw.get("id", 0),
+                    title=raw.get("title", ""),
+                    description=raw.get("description", ""),
+                    category=raw.get("category", "Other"),
+                    location=raw.get("location", ""),
+                    distance=raw.get("distance", ""),
+                    time=raw.get("time", ""),
+                    max_participants=raw.get("max_participants"),
+                    participants=raw.get("participants") or [],
+                    creator_id=raw.get("creator_id"),
+                )
+            )
+        return activities
 
-class Participation(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int
-    activity_id: int
+    @staticmethod
+    def save_all(activities: List["Activity"]) -> None:
+        _write_json([asdict(a) for a in activities])
+
+
+def load_activities() -> List[Activity]:
+    return Activity.load_all()
+
+
+def save_activities(activities: List[Activity]) -> None:
+    Activity.save_all(activities)
