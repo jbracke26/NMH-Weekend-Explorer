@@ -12,3 +12,9 @@ class Config:
     GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID') or ''
     GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET') or ''
     GOOGLE_REDIRECT_URI = os.environ.get('GOOGLE_REDIRECT_URI') or 'http://localhost:3000/auth/google/callback'
+    
+    # Okta OAuth settings
+    OKTA_DOMAIN = os.environ.get('OKTA_DOMAIN') or ''
+    OKTA_CLIENT_ID = os.environ.get('OKTA_CLIENT_ID') or ''
+    OKTA_CLIENT_SECRET = os.environ.get('OKTA_CLIENT_SECRET') or ''
+    OKTA_REDIRECT_URI = os.environ.get('OKTA_REDIRECT_URI') or 'http://localhost:3000/auth/okta/callback'
