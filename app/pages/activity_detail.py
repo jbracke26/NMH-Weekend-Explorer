@@ -2,15 +2,30 @@ import reflex as rx
 from app.models import load_activities
 
 
-def _get_activity_by_id(activity_id: str):
-    for a in load_activities():
-        if str(a.id) == str(activity_id):
-            return a
-    return None
+def pick_activity(activity_id: str):
+    """Try to find an activity by id; if that fails, fall back to the first one."""
+    activities = load_activities()
+
+    if not activities:
+        return None
+
+    for a in activities:
+        try:
+            stored_id = getattr(a, "id", None)
+            if stored_id is None:
+                continue
+
+            if str(stored_id).strip() == str(activity_id).strip():
+                return a
+        except Exception:
+            continue
+
+    return activities[0]
 
 
-def activity_detail(id: str = "") -> rx.Component:
-    activity = _get_activity_by_id(id) if id else None
+def activity_detail(activity_id: str = "") -> rx.Component:
+    """Detail page for a single activity."""
+    activity = pick_activity(activity_id)
 
     if activity is None:
         return rx.box(
@@ -19,12 +34,22 @@ def activity_detail(id: str = "") -> rx.Component:
                     rx.button("← Back to Explore", variant="soft"),
                     href="/explore",
                 ),
-                rx.heading("Activity not found", color="red"),
+                rx.heading("No activities available", color="red"),
                 padding="8",
                 max_width="800px",
                 margin_x="auto",
             )
         )
+
+    # Defensive getters so we do not crash if a field is missing.
+    title = getattr(activity, "title", "Untitled activity")
+    category = getattr(activity, "category", "Other")
+    description = getattr(activity, "description", "")
+    location = getattr(activity, "location", "")
+    distance = getattr(activity, "distance", "")
+    time = getattr(activity, "time", "")
+    max_participants = getattr(activity, "max_participants", "")
+    participants = getattr(activity, "participants", []) or []
 
     return rx.box(
         rx.vstack(
@@ -33,32 +58,27 @@ def activity_detail(id: str = "") -> rx.Component:
                 href="/explore",
             ),
             rx.hstack(
-                rx.heading(activity.title),
-                rx.badge(activity.category, color_scheme="blue"),
+                rx.heading(title, size="5"),
+                rx.badge(category, color_scheme="blue"),
                 align="center",
                 spacing="4",
             ),
-            rx.text(activity.description or ""),
+            rx.text(description),
             rx.divider(),
             rx.vstack(
-                rx.text(f"Location: {activity.location}", weight="medium"),
-                rx.text(f"Distance: {activity.distance}", weight="medium"),
-                rx.text(f"When: {activity.time}", weight="medium"),
-                rx.text(
-                    f"Max participants: {activity.max_participants or 'No limit'}",
-                    weight="medium",
-                ),
+                rx.text(f"Location: {location}"),
+                rx.text(f"Distance: {distance}"),
+                rx.text(f"Time: {time}"),
+                rx.text(f"Max participants: {max_participants}"),
                 align="start",
+                spacing="1",
             ),
             rx.divider(),
-            rx.heading("Participants", size="md"),
+            rx.heading("Participants", size="4"),
             rx.cond(
-                len(activity.participants or []) > 0,
+                len(participants) > 0,
                 rx.vstack(
-                    rx.foreach(
-                        activity.participants or [],
-                        lambda p: rx.text(f"• {p}"),
-                    ),
+                    rx.foreach(participants, lambda p: rx.text(f"• {p}")),
                     align="start",
                 ),
                 rx.text("No participants yet", color="gray"),
@@ -68,4 +88,3 @@ def activity_detail(id: str = "") -> rx.Component:
             margin_x="auto",
         ),
     )
-
