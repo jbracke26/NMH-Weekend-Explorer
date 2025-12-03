@@ -1,13 +1,16 @@
 import os
 import json
+from pathlib import Path
 
-DATA_FILE = "activities.json"
+DATA_FILE = Path(__file__).resolve().parent.parent / "app" / "activities.json"
+
 
 def init_db():
-    if not os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "") as f:
-            json.dump([], f)
+    if not DATA_FILE.exists():
+        with DATA_FILE.open("w", encoding="utf-8") as f:
+            json.dump([], f, indent=2)
+
 
 if __name__ == "__main__":
     init_db()
-    print("Initialized activities.json")
+    print(f"Initialized {DATA_FILE}")

@@ -1,10 +1,56 @@
 import reflex as rx
-from app.example_data import EXAMPLE_ACTIVITIES
+from app.models import load_activities
 
 
-def activity_detail() -> rx.Component:
-    activity = EXAMPLE_ACTIVITIES[0]
-    
+def pick_activity(activity_id: str):
+    """Try to find an activity by id; if that fails, fall back to the first one."""
+    activities = load_activities()
+
+    if not activities:
+        return None
+
+    for a in activities:
+        try:
+            stored_id = getattr(a, "id", None)
+            if stored_id is None:
+                continue
+
+            if str(stored_id).strip() == str(activity_id).strip():
+                return a
+        except Exception:
+            continue
+
+    return activities[0]
+
+
+def activity_detail(activity_id: str = "") -> rx.Component:
+    """Detail page for a single activity."""
+    activity = pick_activity(activity_id)
+
+    if activity is None:
+        return rx.box(
+            rx.vstack(
+                rx.link(
+                    rx.button("← Back to Explore", variant="soft"),
+                    href="/explore",
+                ),
+                rx.heading("No activities available", color="red"),
+                padding="8",
+                max_width="800px",
+                margin_x="auto",
+            )
+        )
+
+    # Defensive getters so we do not crash if a field is missing.
+    title = getattr(activity, "title", "Untitled activity")
+    category = getattr(activity, "category", "Other")
+    description = getattr(activity, "description", "")
+    location = getattr(activity, "location", "")
+    distance = getattr(activity, "distance", "")
+    time = getattr(activity, "time", "")
+    max_participants = getattr(activity, "max_participants", "")
+    participants = getattr(activity, "participants", []) or []
+
     return rx.box(
         rx.vstack(
             rx.link(
@@ -12,42 +58,33 @@ def activity_detail() -> rx.Component:
                 href="/explore",
             ),
             rx.hstack(
-                rx.heading(activity["title"]),
-                rx.badge(activity["category"], color_scheme="blue"),
+                rx.heading(title, size="5"),
+                rx.badge(category, color_scheme="blue"),
                 align="center",
+                spacing="4",
             ),
+            rx.text(description),
+            rx.divider(),
             rx.vstack(
-                rx.text(activity["description"]),
-                rx.divider(),
-                rx.hstack(
-                    rx.text(f"{activity['location']}", weight="medium"),
-                    rx.text(f"{activity['distance']}", weight="medium"),
-                ),
-                rx.text(f"Time: {activity['time']}", weight="medium"),
-                rx.text(f"Host: {activity['host']}", weight="medium"),
+                rx.text(f"Location: {location}"),
+                rx.text(f"Distance: {distance}"),
+                rx.text(f"Time: {time}"),
+                rx.text(f"Max participants: {max_participants}"),
                 align="start",
-                width="100%",
+                spacing="1",
             ),
             rx.divider(),
-            rx.heading("Participants"),
+            rx.heading("Participants", size="4"),
             rx.cond(
-                len(activity["participants"]) > 0,
+                len(participants) > 0,
                 rx.vstack(
-                    rx.foreach(
-                        activity["participants"],
-                        lambda p: rx.text(f"• {p}"),
-                    ),
+                    rx.foreach(participants, lambda p: rx.text(f"• {p}")),
                     align="start",
                 ),
                 rx.text("No participants yet", color="gray"),
             ),
-            rx.divider(),
-            rx.hstack(
-                rx.button("Join Activity", color_scheme="green", disabled=True),
-                rx.button("Edit", color_scheme="blue", disabled=True),
-                rx.button("Delete", color_scheme="red", disabled=True),
-            ),
             padding="8",
             max_width="800px",
+            margin_x="auto",
         ),
     )
