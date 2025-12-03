@@ -1,57 +1,164 @@
 import reflex as rx
-from typing import Optional
+
 
 from reflex_google_auth import GoogleAuthState
 
+from typing import List, Optional
 
-class State(GoogleAuthState):
-    """アプリ全体の状態 + Google ログイン状態を管理する State."""
+from app.models import Activity, load_activities, save_activities
+from app import example_data  
 
-    # 表示用の現在ユーザー情報
-    current_user_name: str = ""
-    current_user_email: str = ""
-    current_user_picture: str = ""
 
-    # シンプルな認証フラグ
-    is_authenticated: bool = False
+class State(rx.State):
+    current_user_id: Optional[int] = 1
+    current_user_name: str = "Demo User"
+    is_authenticated: bool = True
 
-    # メッセージ表示用
+    activities: List[dict] = []
+    redirect_path: str = ""
+
+    search_query: str = ""
+    filter_category: str = "All"
+    filter_distance: str = "Any"
+
+    activity_title: str = ""
+    activity_description: str = ""
+    activity_category: str = "Other"
+    activity_location: str = ""
+    activity_distance: str = ""
+    activity_date: str = ""          
+    activity_time: str = "10:00"     
+    activity_max_participants: str = ""
+
     message: str = ""
     message_type: str = "info"
 
-    def on_google_login_success(self):
-        """Google ログイン成功時に呼び出されるフック."""
-        # GoogleAuthState が検証済みトークン情報を持っている前提
-        if not getattr(self, "token_is_valid", False):
-            self.message = "Google login failed."
+
+    def load_activities(self):
+        """Load activities from activities.json into state.activities."""
+        acts = load_activities()
+        self.activities = [
+            {
+                "id": a.id,
+                "title": a.title,
+                "description": a.description,
+                "category": a.category,
+                "location": a.location,
+                "distance": a.distance,
+                "time": a.time,
+                "max_participants": a.max_participants,
+                "participants": a.participants or [],
+                "creator_id": a.creator_id,
+            }
+            for a in acts
+        ]
+
+    def _next_id(self) -> int:
+        acts = load_activities()
+        return max([a.id for a in acts], default=0) + 1
+
+    def create_activity(self):
+        """Create a new activity and save it to activities.json."""
+        try:
+            acts = load_activities()
+
+            if self.activity_max_participants.strip():
+                try:
+                    max_participants = int(self.activity_max_participants)
+                except ValueError:
+                    max_participants = None
+            else:
+                max_participants = None
+
+            time_str = (
+                f"{self.activity_date} {self.activity_time}".strip()
+                if self.activity_date or self.activity_time
+                else ""
+            )
+
+            new_activity = Activity(
+                id=self._next_id(),
+                title=self.activity_title,
+                description=self.activity_description,
+                category=self.activity_category,
+                location=self.activity_location,
+                distance=self.activity_distance,
+                time=time_str,
+                max_participants=max_participants,
+                participants=[],
+                creator_id=self.current_user_id or 1,
+            )
+
+            acts.append(new_activity)
+            save_activities(acts)
+
+            self.load_activities()
+
+            self.activity_title = ""
+            self.activity_description = ""
+            self.activity_location = ""
+            self.activity_distance = ""
+            self.activity_date = ""
+            self.activity_time = "10:00"
+            self.activity_max_participants = ""
+
+            self.message = "Activity created successfully!"
+            self.message_type = "success"
+
+            return rx.redirect("/explore")
+        except Exception as e:
+            self.message = f"Error creating activity: {e}"
             self.message_type = "error"
-            return
 
-        info = getattr(self, "tokeninfo", {}) or {}
-        self.current_user_name = info.get("name") or ""
-        self.current_user_email = info.get("email") or ""
-        self.current_user_picture = info.get("picture") or ""
+    @rx.var
+    def filtered_activities(self) -> List[dict]:
+        """Activities after applying search, category, and distance filters."""
+        acts = list(self.activities)
 
-        if not self.current_user_email:
-            self.message = "Could not get email from Google."
-            self.message_type = "error"
-            self.is_authenticated = False
-            return
+        q = self.search_query.lower().strip()
+        if q:
+            acts = [
+                a
+                for a in acts
+                if q in a.get("title", "").lower()
+                or q in a.get("description", "").lower()
+                or q in a.get("location", "").lower()
+            ]
 
-        self.is_authenticated = True
-        self.message = "Logged in with Google."
-        self.message_type = "success"
+        if self.filter_category != "All":
+            acts = [
+                a
+                for a in acts
+                if a.get("category", "Other") == self.filter_category
+            ]
 
-    def logout(self):
-        """ログアウトして状態をクリア."""
-        self.current_user_name = ""
-        self.current_user_email = ""
-        self.current_user_picture = ""
-        self.is_authenticated = False
-        self.message = "Logged out."
-        self.message_type = "info"
+        if self.filter_distance != "Any":
+            acts = [
+                a
+                for a in acts
+                if a.get("distance", "Any") == self.filter_distance
+            ]
 
-    def clear_message(self):
-        """メッセージをクリア."""
-        self.message = ""
-        self.message_type = "info"
+        return acts
+
+    @rx.var
+    def my_activities_list(self) -> List[dict]:
+        """Activities created by the current user."""
+        if not self.current_user_id:
+            return []
+        return [
+            a
+            for a in self.activities
+            if a.get("creator_id") == self.current_user_id
+        ]
+
+    def filter_by_location(self, location: str):
+        """Called when you click 'Home' etc on a card."""
+        self.search_query = location
+
+    def filter_by_distance_label(self, distance: str):
+        """Called when you click 'Varies' or '5 minute walk'."""
+        self.filter_distance = distance
+
+    def clear_redirect(self):
+        self.redirect_path = ""

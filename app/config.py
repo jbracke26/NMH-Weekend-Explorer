@@ -1,3 +1,4 @@
+
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -18,3 +19,4 @@ class Config:
     OKTA_CLIENT_ID = os.environ.get('OKTA_CLIENT_ID') or ''
     OKTA_CLIENT_SECRET = os.environ.get('OKTA_CLIENT_SECRET') or ''
     OKTA_REDIRECT_URI = os.environ.get('OKTA_REDIRECT_URI') or 'http://localhost:3000/auth/okta/callback'
+
