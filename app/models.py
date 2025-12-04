@@ -66,3 +66,16 @@ def load_activities() -> List[Activity]:
 
 def save_activities(activities: List[Activity]) -> None:
     Activity.save_all(activities)
+
+def join_activity(activity_id: int, user_id: int) -> None:
+    activities = load_activities()
+    for activity in activities:
+        if activity.id == activity_id:
+            if activity.participants is None:
+                activity.participants = []
+                activity.participants.append(user_id)
+                save_activities(activities)
+            if user_id not in activity.participants:
+                activity.participants.append(user_id)
+                save_activities(activities)
+            break
