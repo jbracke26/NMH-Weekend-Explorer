@@ -3,4 +3,5 @@ httpx>=0.25.0
 python-dotenv>=1.0.0
 
 reflex==0.8.20
+reflex-google-auth
 

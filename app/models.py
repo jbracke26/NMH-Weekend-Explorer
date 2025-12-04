@@ -1,10 +1,9 @@
-
 import json
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import List, Optional
 
-DATA_FILE = Path(__file__).with_name("activities.json")
+DATA_FILE = Path(__file__).parent / "data" / "activities.json"
 
 
 def _read_json() -> list[dict]:
@@ -67,6 +66,7 @@ def load_activities() -> List[Activity]:
 
 def save_activities(activities: List[Activity]) -> None:
     Activity.save_all(activities)
+
 
 def join_activity(activity_id: int, user_id: int) -> None:
     activities = load_activities()
