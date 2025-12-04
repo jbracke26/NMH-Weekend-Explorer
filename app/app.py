@@ -28,8 +28,6 @@ app.add_page(
     activity_detail,
     route="/activity/[activity_id]",   
     title="Activity",
-    on_load=State.load_activity_details,
-    join_activity=State.join_activity,
 )
 
 
