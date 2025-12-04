@@ -10,9 +10,11 @@ from app import example_data
 
 
 class State(rx.State):
-    current_user_id: Optional[int] = 1
-    current_user_name: str = "Demo User"
-    is_authenticated: bool = True
+    current_user_id: Optional[int] = None
+    current_user_name: str = ""
+    is_authenticated: bool = False
+    current_user_email: str = ""
+    current_user_picture: str = ""
 
     activities: List[dict] = []
     redirect_path: str = ""
@@ -162,3 +164,30 @@ class State(rx.State):
 
     def clear_redirect(self):
         self.redirect_path = ""
+
+    def on_google_login_success(self, response: dict):
+        """Google ログイン成功時のハンドラ"""
+        # TODO: response から name / email を取りたい場合はここで処理
+        if not self.current_user_name:
+            self.current_user_name = "Google User"
+
+        self.is_authenticated = True
+        # ログイン後は /explore に飛ばす
+        self.redirect_path = "/explore"
+        self.message = "Logged in successfully!"
+        self.message_type = "success"
+        # 即座にリダイレクト
+        return rx.redirect("/explore")
+
+    def logout(self):
+        """ログアウト処理：認証情報をクリアしてログインページにリダイレクト"""
+        self.current_user_id = None
+        self.current_user_name = ""
+        self.current_user_email = ""
+        self.current_user_picture = ""
+        self.is_authenticated = False
+        self.redirect_path = "/"  # ログアウト後はログインページにリダイレクト
+        self.message = "Logged out."
+        self.message_type = "info"
+        # 即座にリダイレクト
+        return rx.redirect("/")
