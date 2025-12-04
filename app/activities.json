@@ -111,5 +111,41 @@
     "max_participants": 1,
     "participants": [],
     "creator_id": 1
+  },
+  {
+    "id": 10,
+    "title": "",
+    "description": "",
+    "category": "Other",
+    "location": "",
+    "distance": "",
+    "time": "10:00",
+    "max_participants": null,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 11,
+    "title": "",
+    "description": "",
+    "category": "Other",
+    "location": "",
+    "distance": "",
+    "time": "10:00",
+    "max_participants": null,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 12,
+    "title": "234234",
+    "description": "12342314",
+    "category": "Sports",
+    "location": "234",
+    "distance": "2134",
+    "time": "234 10:00",
+    "max_participants": 2314,
+    "participants": [],
+    "creator_id": 1
   }
 ]

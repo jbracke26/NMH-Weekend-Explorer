@@ -1,0 +1,21 @@
+{
+    "users": [
+      {
+        "id": 1,
+        "name": "Henry Bracke",
+        "email": "jbracke@nmhschool.org",
+        "activities": [
+          {"id": 1, "name": "Hiking", "status": "registered", "creator_id": 1},
+          {"id": 2, "name": "Art Workshop", "status": "interested", "creator_id": 2}
+        ]    
+      },
+      {
+        "id": 2,
+        "name": "Shun Honjo",
+        "email": "shonjo26@nmhschool.org",
+        "activities": [
+          {"id": 3, "name": "Music Jam", "status": "registered", "creator_id": 2}
+        ]
+      }
+    ]
+}
