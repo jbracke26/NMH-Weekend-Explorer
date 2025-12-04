@@ -1,6 +1,6 @@
 import reflex as rx
 from typing import List
-from app.models import load_activities, Activity
+from app.models import load_activities
 from app.states.state import State
 from datetime import datetime, timedelta
 import json
@@ -15,7 +15,6 @@ class AdminState(State):
 
         activities = load_activities()
 
-        # Count recent activities (last 7 days)
         now = datetime.utcnow()
         week_ago = now - timedelta(days=7)
 
@@ -29,8 +28,7 @@ class AdminState(State):
                 except:
                     pass
 
-        # Load users from user.json
-        user_file = Path(__file__).parent / "data" / "user.json"
+        user_file = Path(__file__).parent.parent / "data" / "user.json"
         users = []
         if user_file.exists():
             try:
@@ -50,7 +48,7 @@ class AdminState(State):
         if not self.is_admin:
             return []
 
-        user_file = Path(__file__).parent / "data" / "user.json"
+        user_file = Path(__file__).parent.parent / "data" / "user.json"
         users = []
         if user_file.exists():
             try:

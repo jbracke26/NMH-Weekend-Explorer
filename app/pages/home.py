@@ -9,10 +9,8 @@ GOOGLE_CLIENT_ID = _config.GOOGLE_CLIENT_ID or ""
 
 
 def index():
-    """Home page with specific user-requested layout."""
     return layout(
         rx.vstack(
-            # Row 1: My Activities (Horizontal)
             rx.box(
                 rx.heading("My Activities", size="5", margin_bottom="3"),
                 rx.cond(
@@ -22,34 +20,41 @@ def index():
                         rx.hstack(
                             rx.foreach(
                                 State.my_activities_list,
-                                lambda activity: rx.card(
-                                    rx.vstack(
-                                        rx.text(
-                                            activity["title"], weight="bold", size="2"
-                                        ),
-                                        rx.text(activity["time"], size="1"),
-                                        rx.badge(
-                                            rx.cond(
-                                                activity["creator_id"]
-                                                == State.current_user_id,
-                                                "Created",
-                                                "Joined",
+                                lambda activity: rx.link(
+                                    rx.card(
+                                        rx.vstack(
+                                            rx.text(
+                                                activity["title"],
+                                                weight="bold",
+                                                size="2",
                                             ),
-                                            color_scheme=rx.cond(
-                                                activity["creator_id"]
-                                                == State.current_user_id,
-                                                "green",
-                                                "blue",
+                                            rx.text(activity["time"], size="1"),
+                                            rx.badge(
+                                                rx.cond(
+                                                    activity["creator_id"]
+                                                    == State.current_user_id,
+                                                    "Created",
+                                                    "Joined",
+                                                ),
+                                                color_scheme=rx.cond(
+                                                    activity["creator_id"]
+                                                    == State.current_user_id,
+                                                    "green",
+                                                    "blue",
+                                                ),
+                                                size="1",
                                             ),
-                                            size="1",
+                                            align_items="start",
+                                            spacing="1",
                                         ),
-                                        align_items="start",
-                                        spacing="1",
+                                        min_width="200px",
+                                        height="100px",
+                                        cursor="pointer",
+                                        _hover={"box_shadow": "md"},
                                     ),
-                                    min_width="200px",
-                                    height="100px",
-                                    cursor="pointer",
-                                    _hover={"box_shadow": "md"},
+                                    href=f"/activity/{activity['id']}",
+                                    text_decoration="none",
+                                    color="inherit",
                                 ),
                             ),
                             overflow_x="auto",
@@ -72,9 +77,7 @@ def index():
                 width="100%",
                 margin_bottom="6",
             ),
-            # Row 2: Map (Left 2/3) and Upcoming Activities (Right 1/3)
             rx.hstack(
-                # Map (Left 2/3)
                 rx.box(
                     rx.center(
                         rx.vstack(
@@ -89,12 +92,11 @@ def index():
                     background="var(--gray-2)",
                     flex="2",
                 ),
-                # Upcoming Activities (Right 1/3)
                 rx.vstack(
                     rx.heading("Upcoming Activities", size="4", margin_bottom="3"),
                     rx.vstack(
                         rx.foreach(
-                            State.filtered_activities[:5],
+                            State.upcoming_activities,
                             lambda activity: rx.link(
                                 rx.box(
                                     rx.vstack(
