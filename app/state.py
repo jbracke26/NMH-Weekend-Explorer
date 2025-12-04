@@ -1,4 +1,8 @@
 import reflex as rx
+
+
+from reflex_google_auth import GoogleAuthState
+
 from typing import List, Optional
 import json
 from app.models import Activity, load_activities, save_activities
@@ -6,9 +10,11 @@ from app import example_data
 
 
 class State(rx.State):
-    current_user_id: Optional[int] = 1
-    current_user_name: str = "Demo User"
-    is_authenticated: bool = True
+    current_user_id: Optional[int] = None
+    current_user_name: str = ""
+    is_authenticated: bool = False
+    current_user_email: str = ""
+    current_user_picture: str = ""
 
     activities: List[dict] = []
     redirect_path: str = ""
@@ -167,3 +173,27 @@ class State(rx.State):
 
     def clear_redirect(self):
         self.redirect_path = ""
+
+    def on_google_login_success(self, response: dict):
+        """Handler for successful Google login."""
+        # TODO: Extract name / email from response if needed
+        if not self.current_user_name:
+            self.current_user_name = "Google User"
+
+        self.is_authenticated = True
+        self.redirect_path = "/explore"
+        self.message = "Logged in successfully!"
+        self.message_type = "success"
+        return rx.redirect("/explore")
+
+    def logout(self):
+        """Logout: Clear authentication and redirect to login page."""
+        self.current_user_id = None
+        self.current_user_name = ""
+        self.current_user_email = ""
+        self.current_user_picture = ""
+        self.is_authenticated = False
+        self.redirect_path = "/"
+        self.message = "Logged out."
+        self.message_type = "info"
+        return rx.redirect("/")

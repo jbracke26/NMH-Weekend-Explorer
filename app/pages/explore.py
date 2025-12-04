@@ -61,11 +61,92 @@ def activity_card(activity: dict) -> rx.Component:
 
 def explore() -> rx.Component:
     return rx.box(
+        rx.script("""
+            (function() {
+                let lastRedirectPath = '';
+                let lastIsAuthenticated = true;
+                
+                function performRedirect(path) {
+                    if (path && path !== window.location.pathname) {
+                        console.log('Explore: Redirecting to:', path);
+                        window.location.href = path;
+                    }
+                }
+                
+                function checkAndRedirect() {
+                    const hiddenInput = document.getElementById('redirect_path_hidden_explore');
+                    const authInput = document.getElementById('is_authenticated_hidden_explore');
+                    
+                    if (hiddenInput) {
+                        const currentPath = hiddenInput.value || '';
+                        if (currentPath && currentPath !== lastRedirectPath && currentPath !== '') {
+                            lastRedirectPath = currentPath;
+                            performRedirect(currentPath);
+                            return;
+                        }
+                    }
+                    
+                    if (authInput) {
+                        const isAuth = authInput.value === 'true';
+                        if (!isAuth && lastIsAuthenticated && window.location.pathname !== '/') {
+                            lastIsAuthenticated = isAuth;
+                            performRedirect('/');
+                            return;
+                        }
+                        lastIsAuthenticated = isAuth;
+                    }
+                }
+                
+                // より頻繁にチェック（50ms間隔）
+                setInterval(checkAndRedirect, 50);
+                
+                // 初回チェック
+                setTimeout(checkAndRedirect, 10);
+            })();
+        """),
+        rx.input(
+            id="redirect_path_hidden_explore",
+            type="hidden",
+            value=State.redirect_path,
+        ),
+        rx.input(
+            id="is_authenticated_hidden_explore",
+            type="hidden",
+            value=State.is_authenticated,
+        ),
         rx.vstack(
-            rx.heading("Explore Activities"),
-            rx.text(
-                "Browse activities created by the NMH community.",
-                color="gray",
+            rx.hstack(
+                rx.vstack(
+                    rx.heading("Explore Activities"),
+                    rx.text(
+                        "Browse activities created by the NMH community.",
+                        color="gray",
+                    ),
+                    spacing="1",
+                    align="start",
+                ),
+                rx.vstack(
+                    rx.cond(
+                        State.current_user_name != "",
+                        rx.text(
+                            f"Welcome, {State.current_user_name}!",
+                            size="3",
+                            color="gray",
+                        ),
+                    ),
+                    rx.button(
+                        "Logout",
+                        on_click=State.logout,
+                        variant="outline",
+                        color_scheme="red",
+                        size="2",
+                    ),
+                    spacing="2",
+                    align="end",
+                ),
+                justify="between",
+                width="100%",
+                margin_bottom="4",
             ),
             rx.hstack(
                 rx.input(

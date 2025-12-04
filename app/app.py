@@ -1,5 +1,6 @@
 import reflex as rx
 
+from app.pages.home import index as login_page
 from app.pages.explore import explore
 from app.pages.activity_detail import activity_detail
 from app.pages.create_activity import create_activity
@@ -10,10 +11,9 @@ from app.state import State
 app = rx.App()
 
 app.add_page(
-    explore,
+    login_page,
     route="/",
-    title="Explore",
-    on_load=State.load_activities,
+    title="Login",
 )
 
 app.add_page(
@@ -44,3 +44,4 @@ app.add_page(
     route="/my-activities",
     title="My Activities",
 )
+
