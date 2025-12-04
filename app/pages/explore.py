@@ -2,190 +2,182 @@ import reflex as rx
 from app.state import State
 
 
+# style constants
+bg_color = "gray.50"
+card_bg = "white"
+text_color = "gray.600"
+heading_color = "gray.900"
+accent_color = "teal"
+border_color = "gray.200"
+
+
 def activity_card(activity: dict) -> rx.Component:
-    """Single activity card on the Explore page."""
-    return rx.card(
-        rx.vstack(
-            rx.link(
-                rx.heading(activity.get("title", ""), size="4"),
-                href=f"/activity/{activity['id']}",
-                text_decoration="none",
-            ),
-            rx.badge(activity.get("category", "Other"), color_scheme="blue"),
-            rx.text(
-                activity.get("description", ""),
-                color="gray",
-                no_of_lines=3,
-            ),
-            # Location and distance act as filter buttons
-            rx.hstack(
-                rx.button(
-                    activity.get("location", ""),
-                    variant="ghost",
-                    size="2",
-                    padding_x="2",
-                    on_click=lambda: State.filter_by_location(
-                        activity.get("location", "")
+    return rx.link(
+        rx.box(
+            rx.vstack(
+                # category badge
+                rx.box(
+                    rx.badge(
+                        activity["category"],
+                        color_scheme=accent_color,
+                        variant="solid",
+                        padding="1",
                     ),
+                    display="flex",
+                    justify_content="flex-end",
+                    width="100%",
+                    mb=2,
                 ),
-                rx.button(
-                    activity.get("distance", ""),
-                    variant="ghost",
+                # title and description
+                rx.heading(activity["title"], size="4", color=heading_color),
+                rx.text(
+                    activity["description"],
+                    color=text_color,
                     size="2",
-                    padding_x="2",
-                    on_click=lambda: State.filter_by_distance_label(
-                        activity.get("distance", "")
-                    ),
+                    no_of_lines=3,
                 ),
-                spacing="4",
-                margin_top="1",
+                rx.spacer(),
+                rx.divider(border_color=border_color),
+                # footer with location and date
+                rx.hstack(
+                    rx.hstack(
+                        rx.icon("map-pin", size=14, color="gray.500"),
+                        rx.text(
+                            activity["location_name"], font_size="xs", color="gray.500"
+                        ),
+                        spacing="1",
+                    ),
+                    rx.spacer(),
+                    rx.text(
+                        activity["date"],
+                        font_size="xs",
+                        font_weight="bold",
+                        color=f"{accent_color}.600",
+                    ),
+                    width="100%",
+                    pt=2,
+                ),
+                align="start",
+                height="100%",
+                spacing="2",
             ),
-            rx.text(
-                activity.get("time", ""),
-                color="gray",
-                margin_top="1",
-            ),
-            align="start",
-            spacing="2",
-        ),
-        style={
-            "cursor": "pointer",
-            "_hover": {
-                "box_shadow": "lg",
+            padding="5",
+            bg=card_bg,
+            border="1px solid",
+            border_color=border_color,
+            border_radius="xl",
+            box_shadow="sm",
+            transition="all 0.2s",
+            _hover={
                 "transform": "translateY(-2px)",
+                "box_shadow": "md",
+                "border_color": f"{accent_color}.300",
             },
-            "transition": "all 0.15s ease",
-        },
+            height="250px",
+            width="100%",
+        ),
+        href=f"/activity/{activity['id']}",
+        text_decoration="none",
+        width="100%",
     )
 
 
 def explore() -> rx.Component:
     return rx.box(
-        rx.script("""
-            (function() {
-                let lastRedirectPath = '';
-                let lastIsAuthenticated = true;
-                
-                function performRedirect(path) {
-                    if (path && path !== window.location.pathname) {
-                        console.log('Explore: Redirecting to:', path);
-                        window.location.href = path;
-                    }
-                }
-                
-                function checkAndRedirect() {
-                    const hiddenInput = document.getElementById('redirect_path_hidden_explore');
-                    const authInput = document.getElementById('is_authenticated_hidden_explore');
-                    
-                    if (hiddenInput) {
-                        const currentPath = hiddenInput.value || '';
-                        if (currentPath && currentPath !== lastRedirectPath && currentPath !== '') {
-                            lastRedirectPath = currentPath;
-                            performRedirect(currentPath);
-                            return;
-                        }
-                    }
-                    
-                    if (authInput) {
-                        const isAuth = authInput.value === 'true';
-                        if (!isAuth && lastIsAuthenticated && window.location.pathname !== '/') {
-                            lastIsAuthenticated = isAuth;
-                            performRedirect('/');
-                            return;
-                        }
-                        lastIsAuthenticated = isAuth;
-                    }
-                }
-                
-                // より頻繁にチェック（50ms間隔）
-                setInterval(checkAndRedirect, 50);
-                
-                // 初回チェック
-                setTimeout(checkAndRedirect, 10);
-            })();
-        """),
-        rx.input(
-            id="redirect_path_hidden_explore",
-            type="hidden",
-            value=State.redirect_path,
-        ),
-        rx.input(
-            id="is_authenticated_hidden_explore",
-            type="hidden",
-            value=State.is_authenticated,
-        ),
         rx.vstack(
-            rx.hstack(
-                rx.vstack(
-                    rx.heading("Explore Activities"),
-                    rx.text(
-                        "Browse activities created by the NMH community.",
-                        color="gray",
-                    ),
-                    spacing="1",
-                    align="start",
+            # hero section
+            rx.box(
+                rx.heading(
+                    "Weekend Explorer", size="8", color=f"{accent_color}.800", mb=2
                 ),
-                rx.vstack(
-                    rx.cond(
-                        State.current_user_name != "",
-                        rx.text(
-                            f"Welcome, {State.current_user_name}!",
-                            size="3",
-                            color="gray",
-                        ),
+                rx.text(
+                    "Find something to do this weekend.",
+                    color=text_color,
+                    font_size="lg",
+                ),
+                text_align="center",
+                py=8,
+                width="100%",
+                bg=bg_color,
+            ),
+            # main content area
+            rx.vstack(
+                # filters and search
+                rx.hstack(
+                    rx.input(
+                        placeholder="Search activities...",
+                        value=State.search_query,
+                        on_change=State.set_search_query,
+                        bg=card_bg,
+                        border_color="gray.300",
+                        _focus={"border_color": f"{accent_color}.500"},
+                        width=["100%", "300px"],
+                    ),
+                    rx.select(
+                        [
+                            "All Categories",
+                            "Outdoor",
+                            "Food",
+                            "Shopping",
+                            "Sports",
+                            "Other",
+                        ],
+                        placeholder="Category",
+                        value=State.filter_category,
+                        on_change=State.set_filter_category,
+                        bg=card_bg,
+                        border_color="gray.300",
+                    ),
+                    rx.select(
+                        ["Any Distance", "5 min", "15 min", "30 min"],
+                        placeholder="Distance",
+                        value=State.filter_distance,
+                        on_change=State.set_filter_distance,
+                        bg=card_bg,
+                        border_color="gray.300",
                     ),
                     rx.button(
-                        "Logout",
-                        on_click=State.logout,
-                        variant="outline",
-                        color_scheme="red",
-                        size="2",
+                        "Search",
+                        on_click=State.load_activities,
+                        color_scheme=accent_color,
+                        variant="solid",
                     ),
-                    spacing="2",
-                    align="end",
+                    width="100%",
+                    justify="center",
+                    wrap="wrap",
+                    spacing="4",
+                    padding_x="4",
                 ),
-                justify="between",
+                rx.divider(my=6),
+                # results grid
+                rx.cond(
+                    State.activities,
+                    rx.grid(
+                        rx.foreach(State.activities, activity_card),
+                        columns=rx.breakpoints(initial="1", sm="2", md="3", lg="4"),
+                        spacing="6",
+                        width="100%",
+                        padding_x="4",
+                    ),
+                    # empty state
+                    rx.vstack(
+                        rx.icon("search", size=48, color="gray.300"),
+                        rx.text(
+                            "No activities found matching your criteria.",
+                            color="gray.500",
+                        ),
+                        py=12,
+                    ),
+                ),
+                max_width="1200px",
+                margin="0 auto",
                 width="100%",
-                margin_bottom="4",
+                padding_bottom="12",
             ),
-            rx.hstack(
-                rx.input(
-                    placeholder="Search activities...",
-                    width="40%",
-                    value=State.search_query,
-                    on_change=State.set_search_query,
-                ),
-                rx.select(
-                    ["All", "Outdoor", "Food", "Shopping", "Sports", "Other"],
-                    placeholder="Category",
-                    width="20%",
-                    value=State.filter_category,
-                    on_change=State.set_filter_category,
-                ),
-                rx.select(
-                    ["Any", "5 min", "15 min", "30 min"],
-                    placeholder="Distance",
-                    width="20%",
-                    value=State.filter_distance,
-                    on_change=State.set_filter_distance,
-                ),
-                justify="between",
-                width="100%",
-            ),
-            rx.grid(
-                rx.foreach(State.filtered_activities, activity_card),
-                columns={"base": "1", "md": "2", "lg": "3"},
-                spacing="4",
-                width="100%",
-            ),
-            rx.link(
-                rx.button("Create Activity"),
-                href="/create",
-                align_self="flex-start",
-                margin_top="4",
-            ),
-            padding="8",
-            max_width="1000px",
-            margin_x="auto",
+            width="100%",
+            spacing="0",
         ),
+        on_mount=State.load_activities,
+        bg=card_bg,
+        min_height="100vh",
     )
