@@ -1,0 +1,151 @@
+[
+  {
+    "id": 1,
+    "title": "Thanksgiving Break",
+    "description": "Everyone is going on Thanksgiving Break, make sure you have a bus linked in this activity!",
+    "category": "Other",
+    "location": "Home",
+    "distance": "Varies",
+    "time": "Saturday November 22nd",
+    "max_participants": "2000",
+    "participants": [
+      "Henry",
+      "Ethan",
+      "Georgii",
+      "Shun"
+    ],
+    "creator_id": 1
+  },
+  {
+    "id": 2,
+    "title": "123",
+    "description": "123",
+    "category": "Food",
+    "location": "123",
+    "distance": "12",
+    "time": "2025-12-11 10:00",
+    "max_participants": "5",
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 3,
+    "title": "123",
+    "description": "123",
+    "category": "Food",
+    "location": "123",
+    "distance": "12",
+    "time": "2025-12-11 10:00",
+    "max_participants": "5",
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 4,
+    "title": "123",
+    "description": "123",
+    "category": "Food",
+    "location": "123",
+    "distance": "12",
+    "time": "2025-12-11 10:00",
+    "max_participants": "5",
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 5,
+    "title": "123",
+    "description": "123",
+    "category": "Food",
+    "location": "123",
+    "distance": "12",
+    "time": "2025-12-11 10:00",
+    "max_participants": "5",
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 6,
+    "title": "123",
+    "description": "123",
+    "category": "Food",
+    "location": "123",
+    "distance": "12",
+    "time": "2025-12-11 10:00",
+    "max_participants": "5",
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 7,
+    "title": "1",
+    "description": "2",
+    "category": "Other",
+    "location": "3",
+    "distance": "4",
+    "time": "2025-12-04 10:00",
+    "max_participants": 5,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 8,
+    "title": "1",
+    "description": "1",
+    "category": "Sports",
+    "location": "1",
+    "distance": "1",
+    "time": "2025-12-09 10:00",
+    "max_participants": 15,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 9,
+    "title": "123",
+    "description": "1",
+    "category": "Sports",
+    "location": "1",
+    "distance": "1",
+    "time": "2025-12-04 10:00",
+    "max_participants": 1,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 10,
+    "title": "",
+    "description": "",
+    "category": "Other",
+    "location": "",
+    "distance": "",
+    "time": "10:00",
+    "max_participants": null,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 11,
+    "title": "",
+    "description": "",
+    "category": "Other",
+    "location": "",
+    "distance": "",
+    "time": "10:00",
+    "max_participants": null,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 12,
+    "title": "234234",
+    "description": "12342314",
+    "category": "Sports",
+    "location": "234",
+    "distance": "2134",
+    "time": "234 10:00",
+    "max_participants": 2314,
+    "participants": [],
+    "creator_id": 1
+  }
+]

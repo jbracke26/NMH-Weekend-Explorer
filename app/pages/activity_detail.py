@@ -229,7 +229,9 @@ def activity_detail() -> rx.Component:
                 rx.spinner(color=f"{accent_color}.500", size="3"), height="100vh"
             ),
         ),
-        on_mount=lambda: State.get_activity_detail(State.router.page.params["id"]),
+        on_mount=lambda: State.get_activity_detail(
+            State.router.page.params["activity_id"]
+        ),
         bg=bg_color,
         min_height="100vh",
     )
