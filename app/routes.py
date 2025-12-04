@@ -3,5 +3,5 @@ from app.pages import home
 
 
 def register_routes(app: rx.App):
-    """アプリのページルーティングを登録。Googleログインはポップアップで処理するのでコールバックページは不要。"""
+    """Register app page routes. Google login is handled via popup, so callback page is not needed."""
     app.add_page(home.index, route="/")

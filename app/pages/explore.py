@@ -61,7 +61,6 @@ def activity_card(activity: dict) -> rx.Component:
 
 def explore() -> rx.Component:
     return rx.box(
-        # redirect_pathとis_authenticatedの状態変更を監視してリダイレクト
         rx.script("""
             (function() {
                 let lastRedirectPath = '';
@@ -116,7 +115,6 @@ def explore() -> rx.Component:
             value=State.is_authenticated,
         ),
         rx.vstack(
-            # ヘッダー部分：タイトルとログアウトボタン
             rx.hstack(
                 rx.vstack(
                     rx.heading("Explore Activities"),

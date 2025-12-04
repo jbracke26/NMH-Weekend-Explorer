@@ -4,15 +4,13 @@ from app.config import Config
 from reflex_google_auth import google_login, google_oauth_provider
 
 
-# Config を通して .env を読み込んだ上で client_id を取得
 _config = Config()
 GOOGLE_CLIENT_ID = _config.GOOGLE_CLIENT_ID or ""
 
 
 def index():
-    """ログインページ: 未ログインならGoogleログインボタン、ログイン済みなら /explore にリダイレクト。"""
+    """Login page: Shows Google login button if not authenticated, redirects to /explore if authenticated."""
     return rx.container(
-        # redirect_pathとis_authenticatedの状態変更を監視してリダイレクト
         rx.script("""
             (function() {
                 let lastRedirectPath = '';
@@ -68,12 +66,10 @@ def index():
         ),
         rx.cond(
             State.is_authenticated,
-            # ログイン済みなら /explore にリダイレクト
             rx.fragment(
                 rx.text("Redirecting to explore page...", size="4"),
                 rx.script("window.location.href = '/explore';"),
             ),
-            # 未ログインビュー
             rx.vstack(
                 rx.heading("Weekend Explorer", size="9", margin_bottom="2"),
                 rx.text(

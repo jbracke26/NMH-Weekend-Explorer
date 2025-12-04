@@ -10,14 +10,12 @@ from app.state import State
 
 app = rx.App()
 
-# ルート (/) ではまずログインページを表示
 app.add_page(
     login_page,
     route="/",
     title="Login",
 )
 
-# ログイン後に表示するアクティビティ一覧ページ
 app.add_page(
     explore,
     route="/explore",
