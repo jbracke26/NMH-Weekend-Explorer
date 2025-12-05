@@ -116,7 +116,28 @@ def index():
                                                 size="2",
                                                 color="var(--gray-11)",
                                             ),
+                
+                                            rx.text(
+                                                f"{activity['participants_count']} signed up",
+                                                size="1",
+                                                color="var(--gray-9)",
+                                            ),
+                                            rx.cond(
+                                                activity.get("sign_up_limit"),
+                                                rx.text(
+                                                    f"Limit: {activity['sign_up_limit']}",
+                                                    size="1",
+                                                    color="var(--red-9)",
+                                                ),
+                                                None,
+                                            ),
                                             spacing="2",
+                                        ),
+                                        ),
+                                        rx.text(
+                                            f"Location: {activity['location']}",
+                                            size="1",
+                                            color="var(--gray-8)",
                                         ),
                                         align_items="start",
                                         spacing="2",
