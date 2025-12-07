@@ -1,19 +1,13 @@
 import reflex as rx
-
-
-from reflex_google_auth import GoogleAuthState
-
 from typing import List, Optional
 from app.models import Activity, load_activities, save_activities
-from app import example_data  
+from app import example_data
 
 
 class State(rx.State):
-    current_user_id: Optional[int] = None
-    current_user_name: str = ""
-    is_authenticated: bool = False
-    current_user_email: str = ""
-    current_user_picture: str = ""
+    current_user_id: Optional[int] = 1
+    current_user_name: str = "Demo User"
+    is_authenticated: bool = True
 
     activities: List[dict] = []
     redirect_path: str = ""
@@ -27,13 +21,34 @@ class State(rx.State):
     activity_category: str = "Other"
     activity_location: str = ""
     activity_distance: str = ""
-    activity_date: str = ""          
-    activity_time: str = "10:00"     
+    activity_date: str = ""
+    activity_time: str = "10:00"
     activity_max_participants: str = ""
 
     message: str = ""
     message_type: str = "info"
 
+    current_activity: dict = {}
+
+    def load_activity_details(self):
+        """Load the specific activity details based on the route param."""
+        activity_id = self.router.page.params.get("activity_id")
+        if activity_id:
+            if not self.activities:
+                self.load_activities()
+
+            try:
+                aid = int(activity_id)
+                for a in self.activities:
+                    if a["id"] == aid:
+                        self.current_activity = a
+                        break
+            except ValueError:
+                pass
+
+    def join_activity(self):
+        """Join the current activity."""
+        pass
 
     def load_activities(self):
         """Load activities from activities.json into state.activities."""
@@ -89,6 +104,15 @@ class State(rx.State):
                 participants=[],
                 creator_id=self.current_user_id or 1,
             )
+            user_acts = json.load(open("path/to/user.json", "r"))
+            user_activity = {
+                "activity_id": new_activity.id,
+                "user_id": self.current_user_id,
+                "title": new_activity.title,
+                "date": self.activity_date,
+                "time": self.activity_time,
+            }
+            user_acts.append(user_activity)
 
             acts.append(new_activity)
             save_activities(acts)
@@ -128,17 +152,11 @@ class State(rx.State):
 
         if self.filter_category != "All":
             acts = [
-                a
-                for a in acts
-                if a.get("category", "Other") == self.filter_category
+                a for a in acts if a.get("category", "Other") == self.filter_category
             ]
 
         if self.filter_distance != "Any":
-            acts = [
-                a
-                for a in acts
-                if a.get("distance", "Any") == self.filter_distance
-            ]
+            acts = [a for a in acts if a.get("distance", "Any") == self.filter_distance]
 
         return acts
 
@@ -148,9 +166,7 @@ class State(rx.State):
         if not self.current_user_id:
             return []
         return [
-            a
-            for a in self.activities
-            if a.get("creator_id") == self.current_user_id
+            a for a in self.activities if a.get("creator_id") == self.current_user_id
         ]
 
     def filter_by_location(self, location: str):
@@ -163,27 +179,3 @@ class State(rx.State):
 
     def clear_redirect(self):
         self.redirect_path = ""
-
-    def on_google_login_success(self, response: dict):
-        """Handler for successful Google login."""
-        # TODO: Extract name / email from response if needed
-        if not self.current_user_name:
-            self.current_user_name = "Google User"
-
-        self.is_authenticated = True
-        self.redirect_path = "/explore"
-        self.message = "Logged in successfully!"
-        self.message_type = "success"
-        return rx.redirect("/explore")
-
-    def logout(self):
-        """Logout: Clear authentication and redirect to login page."""
-        self.current_user_id = None
-        self.current_user_name = ""
-        self.current_user_email = ""
-        self.current_user_picture = ""
-        self.is_authenticated = False
-        self.redirect_path = "/"
-        self.message = "Logged out."
-        self.message_type = "info"
-        return rx.redirect("/")

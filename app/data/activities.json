@@ -1,0 +1,198 @@
+[
+  {
+    "id": 1,
+    "title": "Northampton Dinner Trip",
+    "description": "Dinner trip to downtown Northampton",
+    "category": "Food",
+    "location": "Northampton, MA",
+    "distance": "15 min",
+    "time": "2025-12-06 18:30",
+    "max_participants": 20,
+    "participants": [
+      37414294
+    ],
+    "creator_id": 1
+  },
+  {
+    "id": 2,
+    "title": "Mini Golf Competition",
+    "description": "Intramurals mini golf competition & open recreation time",
+    "category": "Sports",
+    "location": "Speer Lounge",
+    "distance": "5 min",
+    "time": "2025-12-06 19:30",
+    "max_participants": 30,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 3,
+    "title": "Open Gym Time",
+    "description": "Open recreation at Forslund Basketball Courts",
+    "category": "Sports",
+    "location": "Forslund Basketball Courts",
+    "distance": "5 min",
+    "time": "2025-12-06 21:00",
+    "max_participants": 40,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 4,
+    "title": "Trips to Holyoke Mall",
+    "description": "Shopping trip to Holyoke Mall",
+    "category": "Shopping",
+    "location": "Holyoke, MA",
+    "distance": "30 min",
+    "time": "2025-12-07 14:45",
+    "max_participants": 15,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 5,
+    "title": "Movie Screening: Jurassic World Rebirth",
+    "description": "Movie night in Grandin Lounge",
+    "category": "Other",
+    "location": "Grandin Lounge",
+    "distance": "5 min",
+    "time": "2025-12-07 18:30",
+    "max_participants": 50,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 6,
+    "title": "Minute-To-Win-It Challenges",
+    "description": "Fun challenges & open recreation time",
+    "category": "Other",
+    "location": "Speer Lounge",
+    "distance": "5 min",
+    "time": "2025-12-07 19:00",
+    "max_participants": 30,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 7,
+    "title": "NMH Trivia",
+    "description": "Test your NMH knowledge",
+    "category": "Other",
+    "location": "Grandin Lounge",
+    "distance": "5 min",
+    "time": "2025-12-07 21:00",
+    "max_participants": 40,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 8,
+    "title": "Fall Hike: Notch Mountain",
+    "description": "Hiking trip to Notch Mountain",
+    "category": "Outdoor",
+    "location": "Notch Mountain",
+    "distance": "30 min",
+    "time": "2025-12-08 12:00",
+    "max_participants": 15,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 9,
+    "title": "Tea + Tarot Card Reading",
+    "description": "Tarot readings, astrology charts & open recreation",
+    "category": "Other",
+    "location": "Speer Lounge",
+    "distance": "5 min",
+    "time": "2025-12-08 14:00",
+    "max_participants": 20,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 10,
+    "title": "Trader Joe's Trip",
+    "description": "Shopping trip to Trader Joe's",
+    "category": "Shopping",
+    "location": "Hadley, MA",
+    "distance": "30 min",
+    "time": "2025-12-08 14:00",
+    "max_participants": 12,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 11,
+    "title": "Light up the Fairgrounds + Dinner",
+    "description": "Holiday lights & dinner in Greenfield",
+    "category": "Food",
+    "location": "Greenfield, MA",
+    "distance": "15 min",
+    "time": "2025-12-07 18:15",
+    "max_participants": 20,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 13,
+    "title": "Holiday Movie Marathon Part 2",
+    "description": "Menorah in the Middle screening",
+    "category": "Other",
+    "location": "Grandin Lounge",
+    "distance": "5 min",
+    "time": "2025-12-07 19:15",
+    "max_participants": 50,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 14,
+    "title": "Intramurals: Dodgeball Tournament",
+    "description": "Dodgeball tournament at the gym",
+    "category": "Sports",
+    "location": "Forslund Gym",
+    "distance": "5 min",
+    "time": "2025-12-07 20:45",
+    "max_participants": 30,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 15,
+    "title": "Brattleboro Holiday Festivities",
+    "description": "Holiday events in downtown Brattleboro",
+    "category": "Other",
+    "location": "Brattleboro, VT",
+    "distance": "30 min",
+    "time": "2025-12-06 17:10",
+    "max_participants": 20,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 16,
+    "title": "Bookmark Making",
+    "description": "Craft your own bookmarks",
+    "category": "Other",
+    "location": "Speer Lounge",
+    "distance": "5 min",
+    "time": "2025-12-06 19:00",
+    "max_participants": 25,
+    "participants": [],
+    "creator_id": 1
+  },
+  {
+    "id": 17,
+    "title": "French King Bowling Trip",
+    "description": "Bowling night at French King",
+    "category": "Sports",
+    "location": "Erving, MA",
+    "distance": "30 min",
+    "time": "2025-12-06 20:00",
+    "max_participants": 18,
+    "participants": [
+      37414294
+    ],
+    "creator_id": 1
+  }
+]
