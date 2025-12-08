@@ -18,6 +18,7 @@ class Config:
         os.environ.get("GOOGLE_REDIRECT_URI")
         or "http://localhost:3000/auth/google/callback"
     )
+    GOOGLE_MAPS_API_KEY = os.environ.get("GOOGLE_MAPS_API_KEY") or ""
 
     ADMIN_EMAILS = os.environ.get("ADMIN_EMAILS", "").split(",")
     ADMIN_EMAILS = [email.strip() for email in ADMIN_EMAILS if email.strip()]
