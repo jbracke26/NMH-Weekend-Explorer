@@ -4,7 +4,6 @@ from reflex_google_auth import google_login, google_oauth_provider
 from app.config import Config
 from app.design import COLORS, SPACING
 
-
 _config = Config()
 GOOGLE_CLIENT_ID = _config.GOOGLE_CLIENT_ID or ""
 
@@ -57,15 +56,31 @@ def header() -> rx.Component:
                 ),
                 rx.cond(
                     ~State.hide_header_login,
-                    rx.cond(
-                        GOOGLE_CLIENT_ID != "",
-                        google_oauth_provider(
-                            google_login(
-                                on_success=State.on_google_login_success,
+                    rx.vstack(
+                        rx.hstack(
+                            rx.text("Student", size="2"),
+                            google_oauth_provider(
+                                google_login(
+                                    on_success=State.on_student_login_success,
+                                ),
+                                client_id=GOOGLE_CLIENT_ID,
                             ),
-                            client_id=GOOGLE_CLIENT_ID,
+                            align="center",
+                            spacing="2",
                         ),
-                        rx.text("OAuth not configured", size="1"),
+                        rx.hstack(
+                            rx.text("Teacher", size="2"),
+                            google_oauth_provider(
+                                google_login(
+                                    on_success=State.on_teacher_login_success,
+                                ),
+                                client_id=GOOGLE_CLIENT_ID,
+                            ),
+                            align="center",
+                            spacing="2",
+                        ),
+                        spacing="2",
+                        align="start",
                     ),
                     rx.box(),
                 ),

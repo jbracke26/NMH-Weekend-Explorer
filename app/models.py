@@ -33,6 +33,7 @@ class Activity:
     max_participants: Optional[str] = None
     participants: Optional[list[str]] = None
     creator_id: Optional[int] = None
+    chaperones: Optional[list[int]] = None
 
     @staticmethod
     def load_all() -> List["Activity"]:
@@ -51,6 +52,7 @@ class Activity:
                     max_participants=raw.get("max_participants"),
                     participants=raw.get("participants") or [],
                     creator_id=raw.get("creator_id"),
+                    chaperones=raw.get("chaperones") or [],
                 )
             )
         return activities
