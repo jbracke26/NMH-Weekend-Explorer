@@ -267,7 +267,20 @@ class State(rx.State):
 
     @rx.var
     def upcoming_activities(self) -> List[dict]:
-        return self.filtered_activities[:5]
+        activities = self.filtered_activities[:5]
+        result = []
+        for activity in activities:
+            activity_copy = dict(activity)
+            participants = activity_copy.get("participants", [])
+            activity_copy["participants_count"] = len(participants) if isinstance(participants, list) else 0
+            result.append(activity_copy)
+        return result
+
+    @rx.var
+    def filtered_activities_json(self) -> str:
+        """Return filtered activities as JSON string for use in JavaScript."""
+        import json
+        return json.dumps(self.filtered_activities)
 
     @rx.var
     def my_activities_list(self) -> List[dict]:
