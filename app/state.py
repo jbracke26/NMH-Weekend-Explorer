@@ -1,6 +1,6 @@
 import reflex as rx
-from typing import List, Optional
 import json
+from typing import List, Optional
 from app.models import Activity, load_activities, save_activities
 from app import example_data
 
@@ -105,15 +105,6 @@ class State(rx.State):
                 participants=[],
                 creator_id=self.current_user_id or 1,
             )
-            user_acts = json.load(open("path/to/user.json", "r"))
-            user_activity = {
-                "activity_id": new_activity.id,
-                "user_id": self.current_user_id,
-                "title": new_activity.title,
-                "date": self.activity_date,
-                "time": self.activity_time,
-            }
-            user_acts.append(user_activity)
 
             acts.append(new_activity)
             save_activities(acts)
