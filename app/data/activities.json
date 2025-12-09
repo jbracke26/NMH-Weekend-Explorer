@@ -11,7 +11,9 @@
     "participants": [
       37414294
     ],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
+
   },
   {
     "id": 2,
@@ -23,7 +25,8 @@
     "time": "2025-12-06 19:30",
     "max_participants": 30,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 3,
@@ -35,7 +38,8 @@
     "time": "2025-12-06 21:00",
     "max_participants": 40,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 4,
@@ -47,7 +51,8 @@
     "time": "2025-12-07 14:45",
     "max_participants": 15,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 5,
@@ -59,7 +64,8 @@
     "time": "2025-12-07 18:30",
     "max_participants": 50,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 6,
@@ -71,7 +77,8 @@
     "time": "2025-12-07 19:00",
     "max_participants": 30,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 7,
@@ -83,7 +90,8 @@
     "time": "2025-12-07 21:00",
     "max_participants": 40,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 8,
@@ -95,7 +103,8 @@
     "time": "2025-12-08 12:00",
     "max_participants": 15,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 9,
@@ -107,7 +116,8 @@
     "time": "2025-12-08 14:00",
     "max_participants": 20,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 10,
@@ -119,7 +129,8 @@
     "time": "2025-12-08 14:00",
     "max_participants": 12,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 11,
@@ -131,7 +142,8 @@
     "time": "2025-12-07 18:15",
     "max_participants": 20,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 13,
@@ -143,7 +155,8 @@
     "time": "2025-12-07 19:15",
     "max_participants": 50,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 14,
@@ -155,7 +168,8 @@
     "time": "2025-12-07 20:45",
     "max_participants": 30,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 15,
@@ -167,7 +181,8 @@
     "time": "2025-12-06 17:10",
     "max_participants": 20,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 16,
@@ -179,7 +194,8 @@
     "time": "2025-12-06 19:00",
     "max_participants": 25,
     "participants": [],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   },
   {
     "id": 17,
@@ -193,6 +209,7 @@
     "participants": [
       37414294
     ],
-    "creator_id": 1
+    "creator_id": 1,
+    "admin_signed_up": false
   }
 ]

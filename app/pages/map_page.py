@@ -330,7 +330,7 @@ def map_page():
                                             "border_color": "var(--gray-7)",
                                         },
                                         transition="all 0.2s ease",
-                                        width="calc(50% - 10px)",  
+                                        width="calc(100%)",  
                                         margin="5px",  
                                     ),
                                     href=f"/activity/{activity['id']}",
