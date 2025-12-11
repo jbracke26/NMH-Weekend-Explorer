@@ -1,6 +1,5 @@
 import reflex as rx
 
-
 from typing import List, Optional
 import json
 import hashlib
@@ -18,9 +17,7 @@ class State(rx.State):
 
     activities: List[dict] = []
     redirect_path: str = ""
-    hide_header_login: bool = (
-        False  # hide login button in header on pages with their own login
-    )
+    hide_header_login: bool = False
 
     search_query: str = ""
     filter_category: str = "All"
@@ -41,7 +38,6 @@ class State(rx.State):
     current_activity: dict = {}
 
     def load_activity_details(self):
-        """Load the specific activity details based on the route param."""
         activity_id = self.router.page.params.get("activity_id")
         if activity_id:
             if not self.activities:
@@ -57,7 +53,6 @@ class State(rx.State):
                 pass
 
     def join_activity(self):
-        """Join the current activity."""
         if not self.is_authenticated:
             self.message = "Please log in to join activities."
             self.message_type = "error"
@@ -71,25 +66,21 @@ class State(rx.State):
         try:
             model_join_activity(self.current_activity["id"], self.current_user_id)
 
-            # Update local state
             if "participants" not in self.current_activity:
                 self.current_activity["participants"] = []
 
-            # Check if already joined to avoid duplicates in display (model handles logic)
             if self.current_user_id not in self.current_activity["participants"]:
                 self.current_activity["participants"].append(self.current_user_id)
 
             self.message = "Joined activity successfully!"
             self.message_type = "success"
 
-            # Reload activities to update lists
             self.load_activities()
         except Exception as e:
             self.message = f"Error joining activity: {e}"
             self.message_type = "error"
 
     def delete_activity(self):
-        """Delete the current activity (only if user is the creator)."""
         if not self.is_authenticated:
             self.message = "Please log in to delete activities."
             self.message_type = "error"
@@ -98,7 +89,6 @@ class State(rx.State):
         if not self.current_activity:
             return
 
-        # Check if user is the creator
         if self.current_user_id != self.current_activity.get("creator_id"):
             self.message = "You can only delete activities you created."
             self.message_type = "error"
@@ -106,7 +96,6 @@ class State(rx.State):
 
         try:
             acts = load_activities()
-            # Find and remove the activity
             acts = [a for a in acts if a.id != self.current_activity["id"]]
             save_activities(acts)
 
@@ -120,7 +109,6 @@ class State(rx.State):
             self.message_type = "error"
 
     def leave_activity(self):
-        """Leave an activity the user has joined."""
         if not self.is_authenticated:
             self.message = "Please log in to leave activities."
             self.message_type = "error"
@@ -131,14 +119,12 @@ class State(rx.State):
 
         try:
             acts = load_activities()
-            # Find the activity and remove user from participants
             for a in acts:
                 if a.id == self.current_activity["id"]:
                     if a.participants and self.current_user_id in a.participants:
                         a.participants.remove(self.current_user_id)
                         save_activities(acts)
 
-                        # Update local state
                         self.current_activity["participants"] = a.participants
 
                         self.message = "Left activity successfully!"
@@ -153,7 +139,6 @@ class State(rx.State):
             self.message_type = "error"
 
     def load_activities(self):
-        """Load activities from activities.json into state.activities."""
         acts = load_activities()
         self.activities = [
             {
@@ -176,8 +161,6 @@ class State(rx.State):
         return max([a.id for a in acts], default=0) + 1
 
     def create_activity(self):
-        """Create a new activity and save it to activities.json."""
-        # Validate required fields
         if not self.activity_title or not self.activity_title.strip():
             self.message = "Please provide a title for the activity."
             self.message_type = "error"
@@ -186,14 +169,10 @@ class State(rx.State):
         try:
             acts = load_activities()
 
-            # Ensure acts is a list
             if not isinstance(acts, list):
                 acts = []
 
-            if (
-                self.activity_max_participants
-                and self.activity_max_participants.strip()
-            ):
+            if self.activity_max_participants and self.activity_max_participants.strip():
                 try:
                     max_participants = int(self.activity_max_participants)
                 except ValueError:
@@ -220,28 +199,6 @@ class State(rx.State):
                 creator_id=self.current_user_id,
             )
 
-            user_acts_file = Path(__file__).parent.parent / "data" / "user.json"
-            if user_acts_file.exists():
-                with open(user_acts_file, "r") as f:
-                    user_acts = json.load(f)
-                    # Ensure user_acts is a list
-                    if not isinstance(user_acts, list):
-                        user_acts = []
-            else:
-                user_acts = []
-
-            user_activity = {
-                "activity_id": new_activity.id,
-                "user_id": self.current_user_id,
-                "title": new_activity.title,
-                "date": self.activity_date,
-                "time": self.activity_time,
-            }
-            user_acts.append(user_activity)
-
-            with open(user_acts_file, "w") as f:
-                json.dump(user_acts, f, indent=2)
-
             acts.append(new_activity)
             save_activities(acts)
             self.load_activities()
@@ -264,7 +221,6 @@ class State(rx.State):
 
     @rx.var
     def filtered_activities(self) -> List[dict]:
-        """Activities after applying search, category, and distance filters."""
         acts = list(self.activities)
 
         q = self.search_query.lower().strip()
@@ -285,20 +241,16 @@ class State(rx.State):
         if self.filter_distance != "Any":
             acts = [a for a in acts if a.get("distance", "Any") == self.filter_distance]
 
-        # Sort by date and time
-        # The 'time' field in JSON seems to hold the full datetime string or just time.
-        # We need to parse it robustly.
         from datetime import datetime
 
         def parse_time(t_str):
             if not t_str:
-                return datetime.max  # No time = end of list
+                return datetime.max
 
-            # Try common formats
             formats = [
-                "%Y-%m-%d %H:%M",  # 2025-12-11 10:00
-                "%Y-%m-%d",  # 2025-12-11
-                "%H:%M",  # 10:00
+                "%Y-%m-%d %H:%M",
+                "%Y-%m-%d",
+                "%H:%M",
             ]
 
             for fmt in formats:
@@ -307,7 +259,6 @@ class State(rx.State):
                 except ValueError:
                     continue
 
-            # If natural language or garbage, push to end
             return datetime.max
 
         acts.sort(key=lambda x: parse_time(x.get("time", "")))
@@ -315,12 +266,27 @@ class State(rx.State):
         return acts
 
     @rx.var
+    def upcoming_activities(self) -> List[dict]:
+        activities = self.filtered_activities[:5]
+        result = []
+        for activity in activities:
+            activity_copy = dict(activity)
+            participants = activity_copy.get("participants", [])
+            activity_copy["participants_count"] = len(participants) if isinstance(participants, list) else 0
+            result.append(activity_copy)
+        return result
+
+    @rx.var
+    def filtered_activities_json(self) -> str:
+        """Return filtered activities as JSON string for use in JavaScript."""
+        import json
+        return json.dumps(self.filtered_activities)
+
+    @rx.var
     def my_activities_list(self) -> List[dict]:
-        """Activities created by OR joined by the current user."""
         if not self.current_user_id:
             return []
 
-        # Filter for activities created by user OR where user is in participants
         return [
             a
             for a in self.activities
@@ -329,41 +295,31 @@ class State(rx.State):
         ]
 
     def filter_by_location(self, location: str):
-        """Called when you click 'Home' etc on a card."""
         self.search_query = location
 
     def filter_by_distance_label(self, distance: str):
-        """Called when you click 'Varies' or '5 minute walk'."""
         self.filter_distance = distance
 
     def clear_redirect(self):
         self.redirect_path = ""
 
     def on_google_login_success(self, response: dict):
-        """Handler for successful Google login."""
-        # Decode the JWT credential to get user info
         import base64
 
         credential = response.get("credential", "")
         if credential:
-            # JWT has 3 parts separated by dots: header.payload.signature
             try:
-                # Get the payload (middle part)
                 payload = credential.split(".")[1]
-                # Add padding if needed for base64 decoding
                 payload += "=" * (4 - len(payload) % 4)
-                # Decode the payload
                 decoded = base64.urlsafe_b64decode(payload)
                 user_info = json.loads(decoded)
 
-                # Extract user information
                 self.current_user_name = user_info.get(
                     "name", user_info.get("given_name", "NMH Student")
                 )
                 self.current_user_email = user_info.get("email", "student@nmh.edu")
                 self.current_user_picture = user_info.get("picture", "")
 
-                # Use the 'sub' (subject) as a stable user ID
                 user_sub = user_info.get("sub", "")
                 if user_sub:
                     self.current_user_id = (
@@ -372,13 +328,11 @@ class State(rx.State):
                 else:
                     self.current_user_id = 1
 
-                # Check if user is admin
                 from app.config import Config
 
                 config = Config()
                 self.is_admin = self.current_user_email in config.ADMIN_EMAILS
 
-                # Store user in user.json
                 user_file = Path(__file__).parent.parent / "data" / "user.json"
                 users = []
                 if user_file.exists():
@@ -389,7 +343,6 @@ class State(rx.State):
                     except:
                         users = []
 
-                # Update or add user
                 user_exists = False
                 for u in users:
                     if u.get("user_id") == self.current_user_id:
@@ -420,7 +373,6 @@ class State(rx.State):
                 self.current_user_id = 1
                 self.is_admin = False
         else:
-            # Fallback if no credential
             self.current_user_name = "NMH Student"
             self.current_user_email = "student@nmh.edu"
             self.current_user_id = 1
@@ -429,15 +381,12 @@ class State(rx.State):
         self.is_authenticated = True
         self.message = "Logged in successfully!"
         self.message_type = "success"
-        # Stay on current page instead of redirecting
 
     def check_login(self):
-        """Redirect to login if not authenticated."""
         if not self.is_authenticated:
             return rx.redirect("/")
 
     def logout(self):
-        """Logout: Clear authentication and redirect to login page."""
         self.current_user_id = None
         self.current_user_name = ""
         self.current_user_email = ""

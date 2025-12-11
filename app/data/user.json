@@ -40,5 +40,19 @@
     "title": "test",
     "date": "test",
     "time": "10:00"
+  },
+  {
+    "user_id": 32375958,
+    "email": "shunsuke20070602honjo@gmail.com",
+    "name": "Shunsuke Honjo",
+    "picture": "https://lh3.googleusercontent.com/a/ACg8ocKABJfK_3PsArBk7XlVbAkubZh3U4ft2O87-tm-eCgh-gDZfQ=s96-c",
+    "is_admin": false
+  },
+  {
+    "user_id": 11641704,
+    "email": "youonlyfishonce@gmail.com",
+    "name": "Ethan Huang",
+    "picture": "https://lh3.googleusercontent.com/a/ACg8ocLYqq8d_gUX5WFgD_7BGhLIEOVXhjIA7MmocT3urr7MCSx7E0sQ=s96-c",
+    "is_admin": false
   }
 ]
