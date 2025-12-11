@@ -1,9 +1,9 @@
 import reflex as rx
+
 from typing import List, Optional
 import json
 import hashlib
 from pathlib import Path
-from datetime import datetime
 from app.models import Activity, load_activities, save_activities
 
 
@@ -14,8 +14,6 @@ class State(rx.State):
     current_user_email: str = ""
     current_user_picture: str = ""
     is_admin: bool = False
-    is_teacher: bool = False
-    is_teacher_signup: bool = False
 
     activities: List[dict] = []
     redirect_path: str = ""
@@ -139,14 +137,14 @@ class State(rx.State):
             self.message = f"Error leaving activity: {e}"
             self.message_type = "error"
 
-    def join_chaperone(self):
+    def toggle_chaperone(self):
         if not self.is_authenticated:
-            self.message = "Please log in to volunteer as chaperone."
+            self.message = "Please log in to manage chaperones."
             self.message_type = "error"
             return
 
-        if not self.is_teacher:
-            self.message = "Only teachers can be chaperones."
+        if not self.is_admin:
+            self.message = "Only teachers can sign up as chaperones."
             self.message_type = "error"
             return
 
@@ -157,54 +155,25 @@ class State(rx.State):
             acts = load_activities()
             for a in acts:
                 if a.id == self.current_activity["id"]:
-                    if a.chaperones is None:
-                        a.chaperones = []
-                    if self.current_user_id not in a.chaperones:
-                        a.chaperones.append(self.current_user_id)
-                        save_activities(acts)
-                        self.current_activity["chaperones"] = a.chaperones
-                        self.message = "You are now a chaperone for this activity."
-                        self.message_type = "success"
-                        self.load_activities()
-                        return
-
-            self.message = "Unable to volunteer as chaperone."
-            self.message_type = "error"
+                    current_chaperone = getattr(a, "chaperone_id", None)
+                    if current_chaperone == self.current_user_id:
+                        a.chaperone_id = None
+                        a.admin_signed_up = False
+                        self.current_activity["chaperone_id"] = None
+                        self.current_activity["admin_signed_up"] = False
+                        self.message = "You are no longer chaperoning this activity."
+                    else:
+                        a.chaperone_id = self.current_user_id
+                        a.admin_signed_up = True
+                        self.current_activity["chaperone_id"] = self.current_user_id
+                        self.current_activity["admin_signed_up"] = True
+                        self.message = "You are now chaperoning this activity."
+                    self.message_type = "success"
+                    save_activities(acts)
+                    self.load_activities()
+                    return
         except Exception as e:
-            self.message = f"Error volunteering as chaperone: {e}"
-            self.message_type = "error"
-
-    def leave_chaperone(self):
-        if not self.is_authenticated:
-            self.message = "Please log in to leave chaperone role."
-            self.message_type = "error"
-            return
-
-        if not self.is_teacher:
-            self.message = "You are not a teacher."
-            self.message_type = "error"
-            return
-
-        if not self.current_activity:
-            return
-
-        try:
-            acts = load_activities()
-            for a in acts:
-                if a.id == self.current_activity["id"]:
-                    if a.chaperones and self.current_user_id in a.chaperones:
-                        a.chaperones.remove(self.current_user_id)
-                        save_activities(acts)
-                        self.current_activity["chaperones"] = a.chaperones
-                        self.message = "You are no longer a chaperone for this activity."
-                        self.message_type = "success"
-                        self.load_activities()
-                        return
-
-            self.message = "You are not a chaperone of this activity."
-            self.message_type = "error"
-        except Exception as e:
-            self.message = f"Error leaving chaperone role: {e}"
+            self.message = f"Error updating chaperone: {e}"
             self.message_type = "error"
 
     def load_activities(self):
@@ -221,7 +190,8 @@ class State(rx.State):
                 "max_participants": a.max_participants,
                 "participants": a.participants or [],
                 "creator_id": a.creator_id,
-                "chaperones": a.chaperones or [],
+                "admin_signed_up": getattr(a, "admin_signed_up", False),
+                "chaperone_id": getattr(a, "chaperone_id", None),
             }
             for a in acts
         ]
@@ -267,7 +237,8 @@ class State(rx.State):
                 max_participants=max_participants,
                 participants=[],
                 creator_id=self.current_user_id,
-                chaperones=[],
+                admin_signed_up=False,
+                chaperone_id=None,
             )
 
             acts.append(new_activity)
@@ -312,6 +283,8 @@ class State(rx.State):
         if self.filter_distance != "Any":
             acts = [a for a in acts if a.get("distance", "Any") == self.filter_distance]
 
+        from datetime import datetime
+
         def parse_time(t_str):
             if not t_str:
                 return datetime.max
@@ -336,7 +309,24 @@ class State(rx.State):
 
     @rx.var
     def upcoming_activities(self) -> List[dict]:
-        return self.filtered_activities[:5]
+        activities = self.filtered_activities[:5]
+        result = []
+        for activity in activities:
+            activity_copy = dict(activity)
+            participants = activity_copy.get("participants", [])
+            if isinstance(participants, list):
+                activity_copy["participants_count"] = len(participants)
+            else:
+                activity_copy["participants_count"] = 0
+            activity_copy["admin_signed_up"] = activity_copy.get(
+                "admin_signed_up", False
+            )
+            result.append(activity_copy)
+        return result
+
+    @rx.var
+    def filtered_activities_json(self) -> str:
+        return json.dumps(self.filtered_activities)
 
     @rx.var
     def my_activities_list(self) -> List[dict]:
@@ -350,20 +340,6 @@ class State(rx.State):
             or (a.get("participants") and self.current_user_id in a.get("participants"))
         ]
 
-    def get_user_name(self, user_id: int) -> str:
-        user_file = Path(__file__).parent.parent / "data" / "user.json"
-        if user_file.exists():
-            try:
-                with open(user_file, "r") as f:
-                    data = json.load(f)
-                    if isinstance(data, list):
-                        for u in data:
-                            if u.get("user_id") == user_id:
-                                return u.get("name", f"User {user_id}")
-            except:
-                pass
-        return f"User {user_id}"
-
     def filter_by_location(self, location: str):
         self.search_query = location
 
@@ -373,17 +349,7 @@ class State(rx.State):
     def clear_redirect(self):
         self.redirect_path = ""
 
-    def on_student_login_success(self, response: dict):
-        self.is_teacher_signup = False
-        self.is_teacher = False
-        self._handle_google_login(response)
-
-    def on_teacher_login_success(self, response: dict):
-        self.is_teacher_signup = True
-        self.is_teacher = True
-        self._handle_google_login(response)
-
-    def _handle_google_login(self, response: dict):
+    def on_google_login_success(self, response: dict):
         import base64
 
         credential = response.get("credential", "")
@@ -430,7 +396,6 @@ class State(rx.State):
                         u["name"] = self.current_user_name
                         u["picture"] = self.current_user_picture
                         u["is_admin"] = self.is_admin
-                        u["is_teacher"] = self.is_teacher
                         user_exists = True
                         break
 
@@ -442,7 +407,6 @@ class State(rx.State):
                             "name": self.current_user_name,
                             "picture": self.current_user_picture,
                             "is_admin": self.is_admin,
-                            "is_teacher": self.is_teacher,
                         }
                     )
 
@@ -454,13 +418,11 @@ class State(rx.State):
                 self.current_user_email = "student@nmh.edu"
                 self.current_user_id = 1
                 self.is_admin = False
-                self.is_teacher = False
         else:
             self.current_user_name = "NMH Student"
             self.current_user_email = "student@nmh.edu"
             self.current_user_id = 1
             self.is_admin = False
-            self.is_teacher = False
 
         self.is_authenticated = True
         self.message = "Logged in successfully!"
@@ -477,7 +439,6 @@ class State(rx.State):
         self.current_user_picture = ""
         self.is_authenticated = False
         self.is_admin = False
-        self.is_teacher = False
         self.redirect_path = "/"
         self.message = "Logged out."
         self.message_type = "info"

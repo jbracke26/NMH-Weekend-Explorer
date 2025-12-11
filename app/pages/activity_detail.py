@@ -2,8 +2,6 @@ import reflex as rx
 from app.states.state import State
 from app.layout import layout
 
-
-# style constants
 accent_color = "teal"
 
 
@@ -13,7 +11,6 @@ def activity_detail() -> rx.Component:
             rx.cond(
                 State.current_activity,
                 rx.vstack(
-                    # back button area
                     rx.box(
                         rx.link(
                             rx.hstack(
@@ -31,10 +28,8 @@ def activity_detail() -> rx.Component:
                         padding_top="8",
                         padding_x="4",
                     ),
-                    # main content card
                     rx.box(
                         rx.vstack(
-                            # header with title and category
                             rx.hstack(
                                 rx.heading(
                                     State.current_activity["title"],
@@ -50,7 +45,6 @@ def activity_detail() -> rx.Component:
                                 align="start",
                                 mb=4,
                             ),
-                            # location and time info
                             rx.hstack(
                                 rx.icon("map-pin", color="gray.500"),
                                 rx.text(
@@ -60,7 +54,7 @@ def activity_detail() -> rx.Component:
                                 rx.spacer(),
                                 rx.icon("calendar", color="gray.500"),
                                 rx.text(
-                                    f"{State.current_activity['date']} @ {State.current_activity['time']}",
+                                    State.current_activity["time"],
                                     font_weight="medium",
                                 ),
                                 width="100%",
@@ -68,14 +62,12 @@ def activity_detail() -> rx.Component:
                                 padding_bottom="6",
                                 border_bottom="1px solid var(--gray-5)",
                             ),
-                            # description
                             rx.text(
                                 State.current_activity["description"],
                                 font_size="lg",
                                 line_height="1.6",
                                 mb=8,
                             ),
-                            # details grid (host, capacity)
                             rx.box(
                                 rx.heading("Details", size="5", mb=4),
                                 rx.grid(
@@ -121,6 +113,21 @@ def activity_detail() -> rx.Component:
                                             ),
                                             font_weight="bold",
                                         ),
+                                        rx.cond(
+                                            State.current_activity[
+                                                "admin_signed_up"
+                                            ],
+                                            rx.text(
+                                                "Chaperone assigned",
+                                                font_size="sm",
+                                                color="teal",
+                                            ),
+                                            rx.text(
+                                                "No chaperone yet",
+                                                font_size="sm",
+                                                color="gray.500",
+                                            ),
+                                        ),
                                         align="start",
                                     ),
                                     columns="2",
@@ -132,7 +139,6 @@ def activity_detail() -> rx.Component:
                                 width="100%",
                                 mb=8,
                             ),
-                            # participants section
                             rx.heading("Participants", size="5", mb=4),
                             rx.box(
                                 rx.cond(
@@ -162,11 +168,9 @@ def activity_detail() -> rx.Component:
                                 mb=8,
                             ),
                             rx.divider(mb=8),
-                            # action buttons
                             rx.hstack(
                                 rx.cond(
                                     State.is_authenticated,
-                                    # Show Leave if user is a participant, otherwise show Join
                                     rx.cond(
                                         State.current_activity["participants"]
                                         .to(list)
@@ -197,6 +201,41 @@ def activity_detail() -> rx.Component:
                                         ),
                                         label="Log in to join",
                                     ),
+                                ),
+                                rx.cond(
+                                    State.is_admin,
+                                    rx.cond(
+                                        State.current_activity["admin_signed_up"],
+                                        rx.cond(
+                                            State.current_activity["chaperone_id"]
+                                            == State.current_user_id,
+                                            rx.button(
+                                                "Stop Chaperoning",
+                                                variant="outline",
+                                                color_scheme="purple",
+                                                size="3",
+                                                width="full",
+                                                on_click=State.toggle_chaperone,
+                                            ),
+                                            rx.button(
+                                                "Chaperone Assigned",
+                                                variant="outline",
+                                                color_scheme="gray",
+                                                size="3",
+                                                width="full",
+                                                disabled=True,
+                                            ),
+                                        ),
+                                        rx.button(
+                                            "Sign Up As Chaperone",
+                                            variant="outline",
+                                            color_scheme="purple",
+                                            size="3",
+                                            width="full",
+                                            on_click=State.toggle_chaperone,
+                                        ),
+                                    ),
+                                    rx.fragment(),
                                 ),
                                 rx.cond(
                                     State.current_user_id
@@ -233,7 +272,6 @@ def activity_detail() -> rx.Component:
                     width="100%",
                     padding_bottom="12",
                 ),
-                # loading state
                 rx.center(
                     rx.spinner(color=f"{accent_color}.500", size="3"), height="100vh"
                 ),

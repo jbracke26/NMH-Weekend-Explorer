@@ -30,10 +30,11 @@ class Activity:
     location: str = ""
     distance: str = ""
     time: str = ""
-    max_participants: Optional[str] = None
-    participants: Optional[list[str]] = None
+    max_participants: Optional[int] = None
+    participants: Optional[list[int]] = None
     creator_id: Optional[int] = None
-    chaperones: Optional[list[int]] = None
+    admin_signed_up: bool = False
+    chaperone_id: Optional[int] = None
 
     @staticmethod
     def load_all() -> List["Activity"]:
@@ -52,7 +53,8 @@ class Activity:
                     max_participants=raw.get("max_participants"),
                     participants=raw.get("participants") or [],
                     creator_id=raw.get("creator_id"),
-                    chaperones=raw.get("chaperones") or [],
+                    admin_signed_up=bool(raw.get("admin_signed_up", False)),
+                    chaperone_id=raw.get("chaperone_id"),
                 )
             )
         return activities
