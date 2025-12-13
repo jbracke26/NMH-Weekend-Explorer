@@ -25,7 +25,16 @@ class State(rx.State):
     activity_date: str = ""
     activity_time: str = "10:00"
     activity_max_participants: str = ""
-    activty_admin: bool = False,
+    activity_admin: bool = False,
+    log_location: bool = False,
+    activity_latitude: str = ""
+    activity_longitude: str = ""
+
+    def set_activity_latitude(self, value: str):
+    self.activity_latitude = value
+
+    def set_activity_longitude(self, value: str):
+    self.activity_longitude = value
 
     message: str = ""
     message_type: str = "info"
@@ -67,6 +76,9 @@ class State(rx.State):
                 "max_participants": a.max_participants,
                 "participants": a.participants or [],
                 "creator_id": a.creator_id,
+                "log_location": a.activity_log_location,
+                "latitude": self.activity_latitude if self.activity_log_location else None,
+                "longitude": self.activity_longitude if self.activity_log_location else None,
             }
             for a in acts
         ]
@@ -105,7 +117,8 @@ class State(rx.State):
                 max_participants=max_participants,
                 participants=[],
                 creator_id=self.current_user_id or 1,
-                "admin_signed_up": False,
+                activity_admin=self.activity_admin,
+                log_location=self.activity_log_location,
             )
 
             acts.append(new_activity)
