@@ -102,6 +102,18 @@ def create_activity() -> rx.Component:
                                 is_checked=State.activity_log_location,
                                 on_change=State.set_activity_log_location,
                             ),
+                            rx.cond(
+                                State.activity_log_location,
+                                rx.link(
+                                    "What are coordinates?",
+                                    href="https://en.wikipedia.org/wiki/Geographic_coordinate_system",
+                                    is_external=True,
+                                    color="blue",
+                                    margin_left="2",
+                                ),
+                            ),
+                            align_items="center",
+                        ),
                             width="100%",
                             align_items="start",
                         ),

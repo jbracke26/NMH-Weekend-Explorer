@@ -186,3 +186,11 @@ class State(rx.State):
 
     def clear_redirect(self):
         self.redirect_path = ""
+
+    def toggle_chaperone(self):
+        if self.current_activity["chaperone_id"] == self.current_user_id:
+            self.current_activity["chaperone_id"] = None
+            self.current_activity["admin_signed_up"] = False
+        else:
+            self.current_activity["chaperone_id"] = self.current_user_id
+            self.current_activity["admin_signed_up"] = True

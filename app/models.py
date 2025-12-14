@@ -36,6 +36,7 @@ class Activity:
     admin_signed_up: bool = False
     chaperone_id: Optional[int] = None
 
+
     @staticmethod
     def load_all() -> List["Activity"]:
         raw_list = _read_json()
