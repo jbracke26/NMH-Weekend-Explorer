@@ -34,6 +34,7 @@ class State(rx.State):
     activity_log_location: bool = False
     activity_latitude: str = ""
     activity_longitude: str = ""
+    activity_needs_chaperone: bool = False
 
     message: str = ""
     message_type: str = "info"
@@ -54,6 +55,16 @@ class State(rx.State):
             except:
                 pass
         return f"User {user_id}"
+
+    @rx.var
+    def is_teacher(self) -> bool:
+        """Check if current user is a teacher."""
+        if not self.is_authenticated or not self.current_user_email:
+            return False
+        from app.config import Config
+
+        config = Config()
+        return self.current_user_email in config.TEACHER_EMAILS
 
     @rx.var
     def current_activity_creator_name(self) -> str:
@@ -228,7 +239,7 @@ class State(rx.State):
             self.message_type = "error"
             return
 
-        if not self.is_admin:
+        if not self.is_teacher:
             self.message = "Only teachers can sign up as chaperones."
             self.message_type = "error"
             return
@@ -244,14 +255,18 @@ class State(rx.State):
                     if current_chaperone == self.current_user_id:
                         a.chaperone_id = None
                         a.admin_signed_up = False
+                        a.chaperone_name = ""
                         self.current_activity["chaperone_id"] = None
                         self.current_activity["admin_signed_up"] = False
+                        self.current_activity["chaperone_name"] = ""
                         self.message = "You are no longer chaperoning this activity."
                     else:
                         a.chaperone_id = self.current_user_id
                         a.admin_signed_up = True
+                        a.chaperone_name = self.current_user_name
                         self.current_activity["chaperone_id"] = self.current_user_id
                         self.current_activity["admin_signed_up"] = True
+                        self.current_activity["chaperone_name"] = self.current_user_name
                         self.message = "You are now chaperoning this activity."
                     self.message_type = "success"
                     save_activities(acts)
@@ -276,9 +291,12 @@ class State(rx.State):
                 "longitude": a.longitude,
                 "max_participants": a.max_participants,
                 "participants": a.participants or [],
+                "participants_count": len(a.participants) if a.participants else 0,
                 "creator_id": a.creator_id,
                 "admin_signed_up": getattr(a, "admin_signed_up", False),
                 "chaperone_id": getattr(a, "chaperone_id", None),
+                "needs_chaperone": getattr(a, "needs_chaperone", False),
+                "chaperone_name": getattr(a, "chaperone_name", ""),
                 "latitude": getattr(a, "latitude", None),
                 "longitude": getattr(a, "longitude", None),
             }
@@ -318,20 +336,23 @@ class State(rx.State):
                 else ""
             )
 
-            # Parse latitude and longitude if provided
+            # parse coordinates if provided
             latitude = None
             longitude = None
             if self.activity_log_location:
-                if self.activity_latitude and self.activity_latitude.strip():
-                    try:
-                        latitude = float(self.activity_latitude)
-                    except ValueError:
-                        pass
-                if self.activity_longitude and self.activity_longitude.strip():
-                    try:
-                        longitude = float(self.activity_longitude)
-                    except ValueError:
-                        pass
+                try:
+                    latitude = (
+                        float(self.activity_latitude)
+                        if self.activity_latitude
+                        else None
+                    )
+                    longitude = (
+                        float(self.activity_longitude)
+                        if self.activity_longitude
+                        else None
+                    )
+                except ValueError:
+                    pass
 
             new_activity = Activity(
                 id=self._next_id(),
@@ -346,6 +367,8 @@ class State(rx.State):
                 creator_id=self.current_user_id,
                 admin_signed_up=False,
                 chaperone_id=None,
+                needs_chaperone=self.activity_needs_chaperone,
+                chaperone_name="",
                 latitude=latitude,
                 longitude=longitude,
             )
@@ -388,6 +411,7 @@ class State(rx.State):
         self.activity_log_location = False
         self.activity_latitude = ""
         self.activity_longitude = ""
+        self.activity_needs_chaperone = False
 
     def load_activity_for_edit(self):
         """Load activity data into form fields for editing."""
@@ -397,7 +421,9 @@ class State(rx.State):
 
         activity_id = self.router.page.params.get("activity_id")
         if not activity_id:
-            return rx.redirect("/explore")
+            self.message = "No activity ID provided"
+            self.message_type = "error"
+            return
 
         try:
             aid = int(activity_id)
@@ -412,7 +438,7 @@ class State(rx.State):
                             "You don't have permission to edit this activity."
                         )
                         self.message_type = "error"
-                        return rx.redirect(f"/activity/{aid}")
+                        return
 
                     # Load activity data into form fields
                     self.editing_activity_id = aid
@@ -438,15 +464,28 @@ class State(rx.State):
                     self.activity_max_participants = (
                         str(a.max_participants) if a.max_participants else ""
                     )
+
+                    # load map location if available
+                    self.activity_needs_chaperone = getattr(a, "needs_chaperone", False)
+                    latitude = getattr(a, "latitude", None)
+                    longitude = getattr(a, "longitude", None)
+
+                    if latitude and longitude:
+                        self.activity_log_location = True
+                        self.activity_latitude = str(latitude)
+                        self.activity_longitude = str(longitude)
+                    else:
+                        self.activity_log_location = False
+                        self.activity_latitude = ""
+                        self.activity_longitude = ""
+
                     return
 
             self.message = "Activity not found."
             self.message_type = "error"
-            return rx.redirect("/explore")
         except Exception as e:
             self.message = f"Error loading activity: {str(e)}"
             self.message_type = "error"
-            return rx.redirect("/explore")
 
     def update_activity(self):
         """Update an existing activity with new data."""
@@ -500,6 +539,28 @@ class State(rx.State):
                         else ""
                     )
                     a.time = time_str
+
+                    # update map coordinates if enabled
+                    if self.activity_log_location:
+                        try:
+                            a.latitude = (
+                                float(self.activity_latitude)
+                                if self.activity_latitude
+                                else None
+                            )
+                            a.longitude = (
+                                float(self.activity_longitude)
+                                if self.activity_longitude
+                                else None
+                            )
+                        except ValueError:
+                            a.latitude = None
+                            a.longitude = None
+                    else:
+                        a.latitude = None
+                        a.longitude = None
+
+                    a.needs_chaperone = self.activity_needs_chaperone
 
                     activity_found = True
                     break
@@ -611,6 +672,7 @@ class State(rx.State):
             for a in self.activities
             if a.get("creator_id") == self.current_user_id
             or (a.get("participants") and self.current_user_id in a.get("participants"))
+            or a.get("chaperone_id") == self.current_user_id
         ]
 
     def filter_by_location(self, location: str):

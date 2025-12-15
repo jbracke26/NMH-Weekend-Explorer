@@ -499,12 +499,30 @@ def create_activity() -> rx.Component:
                             width="100%",
                             align_items="start",
                         ),
-                        rx.vstack(
-                            rx.text(
-                                "Log Location on Map?",
-                                weight="bold",
-                                size="2",
-                                margin_bottom="1",
+                        rx.hstack(
+                            rx.vstack(
+                                rx.text(
+                                    "Log Location on Map?",
+                                    weight="bold",
+                                    size="2",
+                                    margin_bottom="1",
+                                ),
+                                rx.switch(
+                                    is_checked=State.activity_log_location,
+                                    on_change=State.set_activity_log_location,
+                                ),
+                                rx.cond(
+                                    State.activity_log_location,
+                                    rx.link(
+                                        "What are coordinates?",
+                                        href="https://en.wikipedia.org/wiki/Geographic_coordinate_system",
+                                        is_external=True,
+                                        color="blue",
+                                        margin_left="2",
+                                    ),
+                                ),
+                                align_items="center",
+                                width="100%",
                             ),
                             rx.switch(
                                 is_checked=State.activity_log_location,
@@ -558,9 +576,15 @@ def create_activity() -> rx.Component:
                                         ),
                                     ),
                                 ),
+                                rx.switch(
+                                    is_checked=State.activity_needs_chaperone,
+                                    on_change=State.set_activity_needs_chaperone,
+                                ),
+                                align_items="center",
+                                width="100%",
                             ),
-                            align_items="center",
                             width="100%",
+                            spacing="4",
                         ),
                         rx.cond(
                             State.activity_log_location,

@@ -9,49 +9,65 @@ accent_color = "teal"
 
 def activity_card(activity: dict) -> rx.Component:
     return rx.link(
-        rx.card(
+        rx.box(
             rx.vstack(
+                rx.text(
+                    activity["title"],
+                    weight="bold",
+                    size="3",
+                ),
                 rx.hstack(
-                    rx.heading(activity["title"], size="4"),
-                    rx.spacer(),
                     rx.badge(
                         activity["category"],
-                        color_scheme=accent_color,
-                        variant="solid",
+                        size="1",
+                        variant="soft",
                     ),
-                    width="100%",
-                    align="center",
+                    rx.text(
+                        activity.get("time", ""),
+                        size="2",
+                        color="var(--gray-11)",
+                    ),
+                    rx.cond(
+                        activity.get("admin_signed_up", False),
+                        rx.badge(
+                            "Chaperone assigned",
+                            size="1",
+                            color_scheme="green",
+                        ),
+                        rx.cond(
+                            activity.get("needs_chaperone", False),
+                            rx.badge(
+                                "Needs chaperone",
+                                size="1",
+                                color_scheme="red",
+                            ),
+                            rx.fragment(),
+                        ),
+                    ),
+                    spacing="2",
                 ),
                 rx.text(
-                    activity["description"],
-                    size="2",
-                    no_of_lines=2,
+                    f"Location: {activity['location']}",
+                    size="1",
+                    color="var(--gray-8)",
                 ),
-                rx.hstack(
-                    rx.icon("map-pin", size=16),
-                    rx.text(activity["location"], size="2"),
-                    rx.spacer(),
-                    rx.icon("clock", size=16),
-                    rx.text(activity.get("time", ""), size="2"),
-                    width="100%",
-                    align="center",
-                    padding_top="2",
-                ),
-                align="start",
+                align_items="start",
                 spacing="2",
             ),
-            style={
-                "cursor": "pointer",
-                "_hover": {
-                    "box_shadow": "lg",
-                    "transform": "translateY(-2px)",
-                },
-                "transition": "all 0.15s ease",
+            padding="3",
+            border_radius="8px",
+            border="1px solid var(--gray-6)",
+            background="var(--color-background)",
+            _hover={
+                "background": "var(--gray-3)",
+                "border_color": "var(--gray-7)",
             },
+            transition="all 0.2s ease",
+            width="100%",
         ),
         href=f"/activity/{activity['id']}",
         text_decoration="none",
-        width="100%",
+        color="inherit",
     )
 
 

@@ -8,14 +8,14 @@
     "distance": "15 min",
     "time": "2025-12-06 18:30",
     "max_participants": 20,
-    "participants": [
-      37414294
-    ],
+    "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 2,
@@ -30,8 +30,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 3,
@@ -46,8 +48,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 4,
@@ -62,8 +66,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 5,
@@ -78,8 +84,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 6,
@@ -94,8 +102,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 7,
@@ -110,8 +120,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 8,
@@ -126,8 +138,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 9,
@@ -142,8 +156,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 10,
@@ -158,8 +174,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 11,
@@ -174,8 +192,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 13,
@@ -190,8 +210,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 14,
@@ -206,8 +228,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 15,
@@ -222,8 +246,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 16,
@@ -238,8 +264,10 @@
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   },
   {
     "id": 17,
@@ -250,13 +278,13 @@
     "distance": "30 min",
     "time": "2025-12-06 20:00",
     "max_participants": 18,
-    "participants": [
-      37414294
-    ],
+    "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
     "chaperone_id": null,
-    "latitude": "42.3251",
-    "longitude": "-72.481655"
+    "needs_chaperone": false,
+    "chaperone_name": "",
+    "latitude": null,
+    "longitude": null
   }
 ]

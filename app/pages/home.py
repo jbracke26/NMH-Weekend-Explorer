@@ -1,5 +1,5 @@
 import reflex as rx
-import json
+
 from app.states.state import State
 from app.layout import layout
 from app.config import Config
@@ -36,13 +36,23 @@ def index():
                                                     activity["creator_id"]
                                                     == State.current_user_id,
                                                     "Created",
-                                                    "Joined",
+                                                    rx.cond(
+                                                        activity.get("chaperone_id")
+                                                        == State.current_user_id,
+                                                        "Chaperoning",
+                                                        "Joined",
+                                                    ),
                                                 ),
                                                 color_scheme=rx.cond(
                                                     activity["creator_id"]
                                                     == State.current_user_id,
                                                     "green",
-                                                    "blue",
+                                                    rx.cond(
+                                                        activity.get("chaperone_id")
+                                                        == State.current_user_id,
+                                                        "purple",
+                                                        "blue",
+                                                    ),
                                                 ),
                                                 size="1",
                                             ),
@@ -448,6 +458,7 @@ def index():
                                 id="home_activities_json_hidden",
                                 type="hidden",
                                 value=State.filtered_activities_json,
+                                style={"display": "none"},
                             ),
                             rx.box(
                                 id="home_map",
@@ -522,10 +533,14 @@ def index():
                                                 size="1",
                                                 color="var(--green-9)",
                                             ),
-                                            rx.text(
-                                                "Needs chaperone",
-                                                size="1",
-                                                color="var(--red-9)",
+                                            rx.cond(
+                                                activity.get("needs_chaperone", False),
+                                                rx.text(
+                                                    "Needs chaperone",
+                                                    size="1",
+                                                    color="var(--red-9)",
+                                                ),
+                                                rx.fragment(),
                                             ),
                                         ),
                                         rx.text(

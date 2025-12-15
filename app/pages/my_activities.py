@@ -23,12 +23,20 @@ def my_activity_card(activity: dict) -> rx.Component:
                         rx.cond(
                             activity["creator_id"] == State.current_user_id,
                             "Created",
-                            "Joined",
+                            rx.cond(
+                                activity.get("chaperone_id") == State.current_user_id,
+                                "Chaperoning",
+                                "Joined",
+                            ),
                         ),
                         color_scheme=rx.cond(
                             activity["creator_id"] == State.current_user_id,
                             "green",
-                            "blue",
+                            rx.cond(
+                                activity.get("chaperone_id") == State.current_user_id,
+                                "purple",
+                                "blue",
+                            ),
                         ),
                     ),
                     rx.spacer(),
