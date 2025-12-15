@@ -79,11 +79,102 @@ def map_page():
                                             let geocodedCount = 0;
                                             
                                             activitiesData.forEach((activity, index) => {{
+                                                // Priority: Use saved coordinates directly if available
+                                                // This avoids unnecessary geocoding API calls
+                                                // The location field is ignored when coordinates exist
+                                                let position;
+                                                if (activity.latitude && activity.longitude) {{
+                                                    const lat = parseFloat(activity.latitude);
+                                                    const lng = parseFloat(activity.longitude);
+                                                    if (!isNaN(lat) && !isNaN(lng)) {{
+                                                        position = {{ lat: lat, lng: lng }};
+                                                        // Create marker directly with saved coordinates
+                                                        const marker = new window.google.maps.Marker({{
+                                                            position: position,
+                                                            map: window.map,
+                                                            title: activity.title,
+                                                            icon: {{
+                                                                url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                                                                scaledSize: new window.google.maps.Size(32, 32)
+                                                            }}
+                                                        }});
+                                                        
+                                                        const infoWindow = new window.google.maps.InfoWindow({{
+                                                            content: `
+                                                                <div style="padding: 8px; min-width: 200px;">
+                                                                    <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold;">${{activity.title}}</h3>
+                                                                    <p style="margin: 4px 0; color: #666; font-size: 12px;"><strong>Category:</strong> ${{activity.category || 'Other'}}</p>
+                                                                    <p style="margin: 4px 0; color: #666; font-size: 12px;"><strong>Location:</strong> ${{activity.location || 'N/A'}}</p>
+                                                                    <p style="margin: 4px 0; color: #666; font-size: 12px;"><strong>Time:</strong> ${{activity.time || 'N/A'}}</p>
+                                                                    <a href="/activity/${{activity.id}}" style="display: inline-block; margin-top: 8px; padding: 6px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">View Details</a>
+                                                                </div>
+                                                            `
+                                                        }});
+                                                        
+                                                        marker.infoWindow = infoWindow;
+                                                        marker.marker = marker;
+                                                        
+                                                        marker.addListener('click', () => {{
+                                                            window.infoWindows.forEach(iw => iw.close());
+                                                            infoWindow.open(window.map, marker);
+                                                            window.map.openInfoWindow = infoWindow;
+                                                            window.map.openMarker = marker;
+                                                        }});
+                                                        
+                                                        window.markers.push(marker);
+                                                        window.infoWindows.push(infoWindow);
+                                                        
+                                                        geocodedCount++;
+                                                        if (geocodedCount === activitiesData.length) {{
+                                                            if (window.markers.length > 0) {{
+                                                                const hasOpenInfoWindow = window.map.openInfoWindow && 
+                                                                    window.map.openInfoWindow.getMap() !== null;
+                                                                
+                                                                if (!hasOpenInfoWindow && !window.mapInitialized) {{
+                                                                    const bounds = new window.google.maps.LatLngBounds();
+                                                                    window.markers.forEach(m => bounds.extend(m.getPosition()));
+                                                                    if (window.markers.length === 1) {{
+                                                                        window.map.setCenter(window.markers[0].getPosition());
+                                                                        window.map.setZoom(15);
+                                                                    }} else {{
+                                                                        window.map.fitBounds(bounds);
+                                                                    }}
+                                                                    window.mapInitialized = true;
+                                                                }}
+                                                            }}
+                                                        }}
+                                                        return;
+                                                    }}
+                                                }}
+                                                
+                                                // Fallback: Only use geocoding if no saved coordinates exist
+                                                // If coordinates exist, we skip this entire block (early return above)
                                                 const location = activity.location || '';
-                                                if (!location) return;
+                                                if (!location) {{
+                                                    // Skip if no location and no coordinates
+                                                    geocodedCount++;
+                                                    if (geocodedCount === activitiesData.length) {{
+                                                        if (window.markers.length > 0) {{
+                                                            const hasOpenInfoWindow = window.map.openInfoWindow && 
+                                                                window.map.openInfoWindow.getMap() !== null;
+                                                            
+                                                            if (!hasOpenInfoWindow && !window.mapInitialized) {{
+                                                                const bounds = new window.google.maps.LatLngBounds();
+                                                                window.markers.forEach(m => bounds.extend(m.getPosition()));
+                                                                if (window.markers.length === 1) {{
+                                                                    window.map.setCenter(window.markers[0].getPosition());
+                                                                    window.map.setZoom(15);
+                                                                }} else {{
+                                                                    window.map.fitBounds(bounds);
+                                                                }}
+                                                                window.mapInitialized = true;
+                                                            }}
+                                                        }}
+                                                    }}
+                                                    return;
+                                                }}
                                                 
                                                 geocoder.geocode({{ address: location + ', Northfield, MA' }}, (results, status) => {{
-                                                    let position;
                                                     if (status === 'OK' && results[0]) {{
                                                         position = results[0].geometry.location;
                                                     }} else {{
@@ -176,14 +267,19 @@ def map_page():
                                                 // Check if data actually changed
                                                 const dataChanged = JSON.stringify(newData) !== JSON.stringify(currentData);
                                                 
-                                                // Don't reload if infoWindow is open or data hasn't changed
+                                                // Check if InfoWindow is open - if so, skip update completely
                                                 const hasOpenInfoWindow = window.map && window.map.openInfoWindow && 
                                                     window.map.openInfoWindow.getMap() !== null;
                                                 
-                                                if (dataChanged && !hasOpenInfoWindow && window.google && window.loadActivities) {{
+                                                if (hasOpenInfoWindow) {{
+                                                    // InfoWindow is open, don't update to prevent instability
+                                                    return;
+                                                }}
+                                                
+                                                if (dataChanged && window.google && window.loadActivities) {{
                                                     window.activitiesData = newData;
                                                     window.loadActivities();
-                                                }} else if (dataChanged && !hasOpenInfoWindow) {{
+                                                }} else if (dataChanged) {{
                                                     window.activitiesData = newData;
                                                 }}
                                             }} catch (e) {{
@@ -247,7 +343,7 @@ def map_page():
                                     }}
                                     
                                     // Watch for changes in activities
-                                    setInterval(updateActivitiesData, 1000);
+                                    setInterval(updateActivitiesData, 5000);
                                 }})();
                                 """
                             ),
@@ -256,7 +352,7 @@ def map_page():
                                 type="hidden",
                                 value=State.filtered_activities_json,
                             ),
-                            rx.box(
+                rx.box(
                                 id="map",
                                 width="100%",
                                 height="500px",
@@ -265,10 +361,10 @@ def map_page():
                                 background="var(--gray-2)",
                             ),
                         ),
-                        rx.center(
-                            rx.vstack(
-                                rx.icon("map-pin", size=48, color="var(--gray-9)"),
-                                rx.text(
+                    rx.center(
+                        rx.vstack(
+                            rx.icon("map-pin", size=48, color="var(--gray-9)"),
+                            rx.text(
                                     "Google Maps API Key not configured",
                                     size="4",
                                     color="var(--gray-11)",
@@ -278,10 +374,10 @@ def map_page():
                                     size="2",
                                     color="var(--gray-10)",
                                 ),
-                                spacing="3",
-                            ),
-                            height="500px",
+                            spacing="3",
                         ),
+                        height="500px",
+                    ),
                     ),
                     flex="2",
                 ),
