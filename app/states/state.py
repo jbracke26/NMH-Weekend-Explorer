@@ -39,6 +39,8 @@ class State(rx.State):
 
     message: str = ""
     message_type: str = "info"
+    
+    intended_role: str = ""  # "student" or "teacher"
 
     current_activity: dict = {}
     editing_activity_id: Optional[int] = None
@@ -775,8 +777,40 @@ class State(rx.State):
             self.is_admin = False
 
         self.is_authenticated = True
-        self.message = "Logged in successfully!"
-        self.message_type = "success"
+        
+        # Check if user logged in with the correct role button
+        if self.intended_role:
+            from app.config import Config
+            config = Config()
+            
+            if self.intended_role == "teacher" and self.current_user_email not in config.TEACHER_EMAILS:
+                self.message = "You logged in as a teacher but your email isn't in the teacher list. You're still logged in as a student."
+                self.message_type = "error"
+            elif self.intended_role == "student" and self.current_user_email in config.TEACHER_EMAILS:
+                self.message = "You logged in as a student but you're actually a teacher. You're still logged in with teacher privileges."
+                self.message_type = "error"
+            else:
+                self.message = "Logged in successfully!"
+                self.message_type = "success"
+        else:
+            self.message = "Logged in successfully!"
+            self.message_type = "success"
+
+    def on_student_login_success(self, response: dict):
+        """Handle student login button click"""
+        self.intended_role = "student"
+        self.on_google_login_success(response)
+    
+    def on_teacher_login_success(self, response: dict):
+        """Handle teacher login button click"""
+        self.intended_role = "teacher"
+        self.on_google_login_success(response)
+    
+    def set_message(self, message: str):
+        """Set or clear the message"""
+        self.message = message
+        if not message:
+            self.message_type = "info"
 
     def check_login(self):
         if not self.is_authenticated:
