@@ -1,21 +1,16 @@
 import reflex as rx
 from app.states.state import State
 from app.layout import layout
-from app.config import Config
-from reflex_google_auth import google_login, google_oauth_provider
-
-_config = Config()
-GOOGLE_CLIENT_ID = _config.GOOGLE_CLIENT_ID or ""
 
 
-def create_activity() -> rx.Component:
+def edit_activity() -> rx.Component:
     return layout(
         rx.cond(
             State.is_authenticated,
             rx.center(
                 rx.card(
                     rx.vstack(
-                        rx.heading("Create New Activity", size="6", margin_bottom="4"),
+                        rx.heading("Edit Activity", size="6", margin_bottom="4"),
                         rx.vstack(
                             rx.text(
                                 "Title", weight="bold", size="2", margin_bottom="1"
@@ -97,56 +92,6 @@ def create_activity() -> rx.Component:
                             align_items="start",
                         ),
                         rx.vstack(
-                            rx.text("Log Location on Map?", weight="bold", size="2", margin_bottom="1"),
-                            rx.switch(
-                                is_checked=State.activity_log_location,
-                                on_change=State.set_activity_log_location,
-                            ),
-                            rx.cond(
-                                State.activity_log_location,
-                                rx.link(
-                                    "What are coordinates?",
-                                    href="https://en.wikipedia.org/wiki/Geographic_coordinate_system",
-                                    is_external=True,
-                                    color="blue",
-                                    margin_left="2",
-                                ),
-                            ),
-                            align_items="center",
-                        ),
-                            width="100%",
-                            align_items="start",
-                        ),
-                        rx.cond(
-                            State.activity_log_location,
-                            rx.hstack(
-                                rx.vstack(
-                                    rx.text("Latitude", weight="bold", size="2", margin_bottom="1"),
-                                    rx.input(
-                                        placeholder="e.g., 42.667144",
-                                        value=State.activity_latitude,
-                                        on_change=State.set_activity_latitude,
-                                        width="100%",
-                                    ),
-                                    width="100%",
-                                    align_items="start",
-                                ),
-                                rx.vstack(
-                                    rx.text("Longitude", weight="bold", size="2", margin_bottom="1"),
-                                    rx.input(
-                                        placeholder="e.g., -72.481655",
-                                        value=State.activity_longitude,
-                                        on_change=State.set_activity_longitude,
-                                        width="100%",
-                                    ),
-                                    width="100%",
-                                    align_items="start",
-                                ),
-                                spacing="4",
-                                width="100%",
-                            ),
-                        ),
-                        rx.vstack(
                             rx.text(
                                 "Distance", weight="bold", size="2", margin_bottom="1"
                             ),
@@ -191,12 +136,29 @@ def create_activity() -> rx.Component:
                             spacing="4",
                             width="100%",
                         ),
-                        rx.button(
-                            "Create Activity",
-                            on_click=State.create_activity,
-                            size="3",
+                        rx.hstack(
+                            rx.link(
+                                rx.button(
+                                    "Cancel",
+                                    variant="outline",
+                                    size="3",
+                                    width="100%",
+                                ),
+                                href=rx.cond(
+                                    State.editing_activity_id,
+                                    f"/activity/{State.editing_activity_id}",
+                                    "/explore",
+                                ),
+                            ),
+                            rx.button(
+                                "Update Activity",
+                                on_click=State.update_activity,
+                                size="3",
+                                width="100%",
+                                color_scheme="teal",
+                            ),
+                            spacing="4",
                             width="100%",
-                            color_scheme="teal",
                             margin_top="6",
                         ),
                         spacing="4",
@@ -210,20 +172,14 @@ def create_activity() -> rx.Component:
                 padding_y="8",
                 width="100%",
             ),
-            # Login Prompt if not authenticated
+            # Redirect to home if not authenticated
             rx.center(
                 rx.vstack(
                     rx.heading("Please Login", size="6"),
-                    rx.text("You need to be logged in to create an activity."),
-                    rx.cond(
-                        GOOGLE_CLIENT_ID != "",
-                        google_oauth_provider(
-                            google_login(
-                                on_success=State.on_google_login_success,
-                            ),
-                            client_id=GOOGLE_CLIENT_ID,
-                        ),
-                        rx.text("Google OAuth not configured.", color="red"),
+                    rx.text("You need to be logged in to edit activities."),
+                    rx.link(
+                        rx.button("Back to Home"),
+                        href="/",
                     ),
                     spacing="4",
                     align="center",
@@ -232,5 +188,5 @@ def create_activity() -> rx.Component:
                 width="100%",
             ),
         ),
-        on_mount=State.clear_activity_form,
+        on_mount=State.load_activity_for_edit,
     )
