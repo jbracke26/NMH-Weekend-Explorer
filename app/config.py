@@ -22,3 +22,6 @@ class Config:
 
     ADMIN_EMAILS = os.environ.get("ADMIN_EMAILS", "").split(",")
     ADMIN_EMAILS = [email.strip() for email in ADMIN_EMAILS if email.strip()]
+
+    TEACHER_EMAILS = os.environ.get("TEACHER_EMAILS", "").split(",")
+    TEACHER_EMAILS = [email.strip() for email in TEACHER_EMAILS if email.strip()]

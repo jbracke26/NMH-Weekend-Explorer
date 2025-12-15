@@ -114,18 +114,36 @@ def activity_detail() -> rx.Component:
                                             font_weight="bold",
                                         ),
                                         rx.cond(
-                                            State.current_activity[
-                                                "admin_signed_up"
-                                            ],
-                                            rx.text(
-                                                "Chaperone assigned",
-                                                font_size="sm",
-                                                color="teal",
+                                            State.current_activity["admin_signed_up"],
+                                            rx.vstack(
+                                                rx.text(
+                                                    "Chaperone:",
+                                                    font_size="sm",
+                                                    color="gray.500",
+                                                ),
+                                                rx.text(
+                                                    State.current_activity.get(
+                                                        "chaperone_name", "Teacher"
+                                                    ),
+                                                    font_weight="bold",
+                                                    color="teal",
+                                                ),
+                                                align="start",
                                             ),
-                                            rx.text(
-                                                "No chaperone yet",
-                                                font_size="sm",
-                                                color="gray.500",
+                                            rx.cond(
+                                                State.current_activity.get(
+                                                    "needs_chaperone", False
+                                                ),
+                                                rx.text(
+                                                    "Needs chaperone",
+                                                    font_size="sm",
+                                                    color="red",
+                                                ),
+                                                rx.text(
+                                                    "No chaperone needed",
+                                                    font_size="sm",
+                                                    color="gray.500",
+                                                ),
                                             ),
                                         ),
                                         align="start",
@@ -201,7 +219,7 @@ def activity_detail() -> rx.Component:
                                     ),
                                 ),
                                 rx.cond(
-                                    State.is_admin,
+                                    State.is_teacher,
                                     rx.cond(
                                         State.current_activity["admin_signed_up"],
                                         rx.cond(

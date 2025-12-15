@@ -1,5 +1,5 @@
 import reflex as rx
-import json
+
 from app.states.state import State
 from app.layout import layout
 from app.config import Config
@@ -255,6 +255,7 @@ def map_page():
                                 id="activities_json_hidden",
                                 type="hidden",
                                 value=State.filtered_activities_json,
+                                style={"display": "none"},
                             ),
                             rx.box(
                                 id="map",
@@ -307,16 +308,50 @@ def map_page():
                                                     variant="soft",
                                                 ),
                                                 rx.text(
-                                                    activity["location"],
+                                                    activity["time"],
                                                     size="2",
                                                     color="var(--gray-11)",
                                                 ),
+                                                rx.text(
+                                                    f"{activity['participants_count']} signed up",
+                                                    size="1",
+                                                    color="var(--gray-9)",
+                                                ),
+                                                rx.cond(
+                                                    activity.get("max_participants"),
+                                                    rx.text(
+                                                        f"Limit: {activity['max_participants']}",
+                                                        size="1",
+                                                        color="var(--red-9)",
+                                                    ),
+                                                    None,
+                                                ),
                                                 spacing="2",
+                                                wrap="wrap",
+                                            ),
+                                            rx.cond(
+                                                activity["admin_signed_up"],
+                                                rx.text(
+                                                    "Chaperone assigned",
+                                                    size="1",
+                                                    color="var(--green-9)",
+                                                ),
+                                                rx.cond(
+                                                    activity.get(
+                                                        "needs_chaperone", False
+                                                    ),
+                                                    rx.text(
+                                                        "Needs chaperone",
+                                                        size="1",
+                                                        color="var(--red-9)",
+                                                    ),
+                                                    rx.fragment(),
+                                                ),
                                             ),
                                             rx.text(
-                                                activity["time"],
-                                                size="2",
-                                                color="var(--gray-10)",
+                                                f"Location: {activity['location']}",
+                                                size="1",
+                                                color="var(--gray-8)",
                                             ),
                                             align_items="start",
                                             spacing="2",
@@ -330,8 +365,8 @@ def map_page():
                                             "border_color": "var(--gray-7)",
                                         },
                                         transition="all 0.2s ease",
-                                        width="calc(100%)",  
-                                        margin="5px",  
+                                        width="calc(100%)",
+                                        margin="5px",
                                     ),
                                     href=f"/activity/{activity['id']}",
                                     text_decoration="none",

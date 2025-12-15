@@ -2,7 +2,7 @@ import reflex as rx
 from app.states.state import State
 from reflex_google_auth import google_login, google_oauth_provider
 from app.config import Config
-from app.design import COLORS, SPACING
+from app.design import COLORS
 
 _config = Config()
 GOOGLE_CLIENT_ID = _config.GOOGLE_CLIENT_ID or ""
