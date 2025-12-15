@@ -500,15 +500,15 @@ def create_activity() -> rx.Component:
                             align_items="start",
                         ),
                         rx.vstack(
-                            rx.text("Set Location on Map", weight="bold", size="2", margin_bottom="1"),
-                            rx.hstack(
-                                rx.text("Use interactive map?", weight="bold", size="2"),
-                                rx.switch(
-                                    is_checked=State.use_map_for_location,
-                                    on_change=State.set_use_map_for_location,
-                                ),
-                                spacing="2",
-                                align_items="center",
+                            rx.text(
+                                "Log Location on Map?",
+                                weight="bold",
+                                size="2",
+                                margin_bottom="1",
+                            ),
+                            rx.switch(
+                                is_checked=State.activity_log_location,
+                                on_change=State.set_activity_log_location,
                             ),
                             rx.cond(
                                 State.use_map_for_location,
@@ -559,8 +559,47 @@ def create_activity() -> rx.Component:
                                     ),
                                 ),
                             ),
+                            align_items="center",
                             width="100%",
-                            align_items="start",
+                        ),
+                        rx.cond(
+                            State.activity_log_location,
+                            rx.hstack(
+                                rx.vstack(
+                                    rx.text(
+                                        "Latitude",
+                                        weight="bold",
+                                        size="2",
+                                        margin_bottom="1",
+                                    ),
+                                    rx.input(
+                                        placeholder="e.g., 42.667144",
+                                        value=State.activity_latitude,
+                                        on_change=State.set_activity_latitude,
+                                        width="100%",
+                                    ),
+                                    width="100%",
+                                    align_items="start",
+                                ),
+                                rx.vstack(
+                                    rx.text(
+                                        "Longitude",
+                                        weight="bold",
+                                        size="2",
+                                        margin_bottom="1",
+                                    ),
+                                    rx.input(
+                                        placeholder="e.g., -72.481655",
+                                        value=State.activity_longitude,
+                                        on_change=State.set_activity_longitude,
+                                        width="100%",
+                                    ),
+                                    width="100%",
+                                    align_items="start",
+                                ),
+                                spacing="4",
+                                width="100%",
+                            ),
                         ),
                         rx.vstack(
                             rx.text(
@@ -650,6 +689,5 @@ def create_activity() -> rx.Component:
                 ),
             ),
         ),
-        on_mount=State.on_create_activity_page_load,
-        on_unmount=State.set_hide_header_login(False),
+        on_mount=State.clear_activity_form,
     )

@@ -3,6 +3,7 @@ from app.pages.home import index as login_page
 from app.pages.explore import explore
 from app.pages.activity_detail import activity_detail
 from app.pages.create_activity import create_activity
+from app.pages.edit_activity import edit_activity
 from app.pages.my_activities import my_activities
 from app.pages.map_page import map_page
 from app.pages.admin_dashboard import admin_dashboard
@@ -32,6 +33,12 @@ app.add_page(
     create_activity,
     route="/create",
     title="Create Activity",
+)
+
+app.add_page(
+    edit_activity,
+    route="/edit/[activity_id]",
+    title="Edit Activity",
 )
 
 app.add_page(

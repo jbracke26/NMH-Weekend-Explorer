@@ -50,7 +50,12 @@ def activity_detail() -> rx.Component:
                                 rx.text(
                                     State.current_activity["location"],
                                     font_weight="medium",
-                                ),
+                                    ),
+                                        href=f"https://www.google.com/maps?q={State.current_activity['latitude']},{State.current_activity['longitude']}",
+                                        is_external=True,  # ensures it opens in a new tab
+                                        text_decoration="none",
+                                        _hover={"opacity": "0.7"},
+                                    ),
                                 rx.spacer(),
                                 rx.icon("calendar", color="gray.500"),
                                 rx.text(
@@ -80,7 +85,7 @@ def activity_detail() -> rx.Component:
                                             letter_spacing="wide",
                                         ),
                                         rx.text(
-                                            State.current_activity["creator_id"],
+                                            State.current_activity_creator_name,
                                             font_weight="bold",
                                         ),
                                         align="start",
@@ -110,10 +115,6 @@ def activity_detail() -> rx.Component:
                                                     ]
                                                 ),
                                                 rx.text("Unlimited"),
-                                            ),
-                                            rx.cond(
-                                                State.is_admin & State.current_activity["participants"].to(list).contains(State.current_user_id),
-                                                rx.text("Admin has joined", color="teal", font_weight="medium", margin_left="8px"),
                                             ),
                                             font_weight="bold",
                                         ),
@@ -146,14 +147,12 @@ def activity_detail() -> rx.Component:
                             rx.heading("Participants", size="5", mb=4),
                             rx.box(
                                 rx.cond(
-                                    State.current_activity["participants"],
+                                    State.current_activity_participant_names,
                                     rx.flex(
                                         rx.foreach(
-                                            State.current_activity["participants"].to(
-                                                list
-                                            ),
-                                            lambda p: rx.badge(
-                                                p,
+                                            State.current_activity_participant_names,
+                                            lambda name: rx.badge(
+                                                name,
                                                 variant="soft",
                                                 color_scheme="gray",
                                                 padding="2",
@@ -245,11 +244,14 @@ def activity_detail() -> rx.Component:
                                     State.current_user_id
                                     == State.current_activity["creator_id"],
                                     rx.hstack(
-                                        rx.button(
-                                            "Edit",
-                                            variant="outline",
-                                            color_scheme="blue",
-                                            size="3",
+                                        rx.link(
+                                            rx.button(
+                                                "Edit",
+                                                variant="outline",
+                                                color_scheme="blue",
+                                                size="3",
+                                            ),
+                                            href=f"/edit/{State.current_activity['id']}",
                                         ),
                                         rx.button(
                                             "Delete",

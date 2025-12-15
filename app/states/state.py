@@ -34,12 +34,46 @@ class State(rx.State):
     activity_log_location: bool = False
     activity_latitude: str = ""
     activity_longitude: str = ""
-    use_map_for_location: bool = False
 
     message: str = ""
     message_type: str = "info"
 
     current_activity: dict = {}
+    editing_activity_id: Optional[int] = None
+
+    def get_user_name(self, user_id: int) -> str:
+        """Get user name from user_id for display purposes."""
+        user_file = Path(__file__).parent.parent / "data" / "user.json"
+        if user_file.exists():
+            try:
+                with open(user_file, "r") as f:
+                    users = json.load(f)
+                    for u in users:
+                        if u.get("user_id") == user_id:
+                            return u.get("name", f"User {user_id}")
+            except:
+                pass
+        return f"User {user_id}"
+
+    @rx.var
+    def current_activity_creator_name(self) -> str:
+        """Get the creator name for the current activity."""
+        if not self.current_activity:
+            return ""
+        creator_id = self.current_activity.get("creator_id")
+        if creator_id:
+            return self.get_user_name(creator_id)
+        return "Unknown"
+
+    @rx.var
+    def current_activity_participant_names(self) -> list[str]:
+        """Get participant names for the current activity."""
+        if not self.current_activity:
+            return []
+        participants = self.current_activity.get("participants", [])
+        if not isinstance(participants, list):
+            return []
+        return [self.get_user_name(p) for p in participants]
 
     def set_activity_log_location(self, value: bool):
         self.activity_log_location = value
@@ -245,6 +279,8 @@ class State(rx.State):
                 "creator_id": a.creator_id,
                 "admin_signed_up": getattr(a, "admin_signed_up", False),
                 "chaperone_id": getattr(a, "chaperone_id", None),
+                "latitude": getattr(a, "latitude", None),
+                "longitude": getattr(a, "longitude", None),
             }
             for a in acts
         ]
@@ -265,7 +301,10 @@ class State(rx.State):
             if not isinstance(acts, list):
                 acts = []
 
-            if self.activity_max_participants and self.activity_max_participants.strip():
+            if (
+                self.activity_max_participants
+                and self.activity_max_participants.strip()
+            ):
                 try:
                     max_participants = int(self.activity_max_participants)
                 except ValueError:
@@ -279,35 +318,21 @@ class State(rx.State):
                 else ""
             )
 
-            # Determine coordinates - only save if map was used and coordinates are present
-            lat_value = None
-            lng_value = None
-            if self.use_map_for_location:
-                # Get coordinates from state
-                lat_str = str(self.activity_latitude).strip() if self.activity_latitude else ""
-                lng_str = str(self.activity_longitude).strip() if self.activity_longitude else ""
-                
-                # Debug logging
-                print(f"DEBUG create_activity - use_map_for_location: {self.use_map_for_location}")
-                print(f"DEBUG create_activity - activity_latitude: '{self.activity_latitude}' (type: {type(self.activity_latitude)})")
-                print(f"DEBUG create_activity - activity_longitude: '{self.activity_longitude}' (type: {type(self.activity_longitude)})")
-                print(f"DEBUG create_activity - lat_str: '{lat_str}', lng_str: '{lng_str}'")
-                
-                if lat_str and lng_str:
+            # Parse latitude and longitude if provided
+            latitude = None
+            longitude = None
+            if self.activity_log_location:
+                if self.activity_latitude and self.activity_latitude.strip():
                     try:
-                        # Validate that they are valid numbers
-                        float(lat_str)
-                        float(lng_str)
-                        lat_value = lat_str
-                        lng_value = lng_str
-                        print(f"DEBUG: Saving coordinates - lat: {lat_value}, lng: {lng_value}")
+                        latitude = float(self.activity_latitude)
                     except ValueError:
-                        print(f"DEBUG: Invalid coordinates - lat: {lat_str}, lng: {lng_str}")
-                        lat_value = None
-                        lng_value = None
-                else:
-                    print(f"DEBUG: Coordinates empty or invalid - lat: '{lat_str}', lng: '{lng_str}'")
-            
+                        pass
+                if self.activity_longitude and self.activity_longitude.strip():
+                    try:
+                        longitude = float(self.activity_longitude)
+                    except ValueError:
+                        pass
+
             new_activity = Activity(
                 id=self._next_id(),
                 title=self.activity_title,
@@ -321,8 +346,8 @@ class State(rx.State):
                 creator_id=self.current_user_id,
                 admin_signed_up=False,
                 chaperone_id=None,
-                latitude=lat_value,
-                longitude=lng_value,
+                latitude=latitude,
+                longitude=longitude,
             )
 
             acts.append(new_activity)
@@ -347,6 +372,163 @@ class State(rx.State):
             return rx.redirect("/explore")
         except Exception as e:
             self.message = f"Error creating activity: {str(e)}"
+            self.message_type = "error"
+
+    def clear_activity_form(self):
+        """Clear all activity form fields."""
+        self.editing_activity_id = None
+        self.activity_title = ""
+        self.activity_description = ""
+        self.activity_category = "Other"
+        self.activity_location = ""
+        self.activity_distance = ""
+        self.activity_date = ""
+        self.activity_time = "10:00"
+        self.activity_max_participants = ""
+        self.activity_log_location = False
+        self.activity_latitude = ""
+        self.activity_longitude = ""
+
+    def load_activity_for_edit(self):
+        """Load activity data into form fields for editing."""
+        # Check authentication first
+        if not self.is_authenticated:
+            return
+
+        activity_id = self.router.page.params.get("activity_id")
+        if not activity_id:
+            return rx.redirect("/explore")
+
+        try:
+            aid = int(activity_id)
+            acts = load_activities()
+
+            for a in acts:
+                if a.id == aid:
+                    # Check permissions - only creator or admin can edit
+                    # Admins can edit any activity
+                    if not self.is_admin and a.creator_id != self.current_user_id:
+                        self.message = (
+                            "You don't have permission to edit this activity."
+                        )
+                        self.message_type = "error"
+                        return rx.redirect(f"/activity/{aid}")
+
+                    # Load activity data into form fields
+                    self.editing_activity_id = aid
+                    self.activity_title = a.title
+                    self.activity_description = a.description
+                    self.activity_category = a.category
+                    self.activity_location = a.location
+                    self.activity_distance = a.distance
+
+                    # Parse time string back into date and time components
+                    if a.time:
+                        time_parts = a.time.strip().split()
+                        if len(time_parts) >= 2:
+                            self.activity_date = time_parts[0]
+                            self.activity_time = time_parts[1]
+                        elif len(time_parts) == 1:
+                            # Could be just date or just time
+                            if ":" in time_parts[0]:
+                                self.activity_time = time_parts[0]
+                            else:
+                                self.activity_date = time_parts[0]
+
+                    self.activity_max_participants = (
+                        str(a.max_participants) if a.max_participants else ""
+                    )
+                    return
+
+            self.message = "Activity not found."
+            self.message_type = "error"
+            return rx.redirect("/explore")
+        except Exception as e:
+            self.message = f"Error loading activity: {str(e)}"
+            self.message_type = "error"
+            return rx.redirect("/explore")
+
+    def update_activity(self):
+        """Update an existing activity with new data."""
+        if not self.editing_activity_id:
+            self.message = "No activity selected for editing."
+            self.message_type = "error"
+            return
+
+        if not self.activity_title or not self.activity_title.strip():
+            self.message = "Please provide a title for the activity."
+            self.message_type = "error"
+            return
+
+        try:
+            acts = load_activities()
+            activity_found = False
+
+            for a in acts:
+                if a.id == self.editing_activity_id:
+                    # Check permissions
+                    if a.creator_id != self.current_user_id and not self.is_admin:
+                        self.message = (
+                            "You don't have permission to edit this activity."
+                        )
+                        self.message_type = "error"
+                        return
+
+                    # Update activity fields
+                    a.title = self.activity_title
+                    a.description = self.activity_description
+                    a.category = self.activity_category
+                    a.location = self.activity_location
+                    a.distance = self.activity_distance
+
+                    # Update max_participants
+                    if (
+                        self.activity_max_participants
+                        and self.activity_max_participants.strip()
+                    ):
+                        try:
+                            a.max_participants = int(self.activity_max_participants)
+                        except ValueError:
+                            a.max_participants = None
+                    else:
+                        a.max_participants = None
+
+                    # Update time
+                    time_str = (
+                        f"{self.activity_date} {self.activity_time}".strip()
+                        if self.activity_date or self.activity_time
+                        else ""
+                    )
+                    a.time = time_str
+
+                    activity_found = True
+                    break
+
+            if not activity_found:
+                self.message = "Activity not found."
+                self.message_type = "error"
+                return
+
+            save_activities(acts)
+            self.load_activities()
+
+            # Clear form fields
+            activity_id = self.editing_activity_id
+            self.editing_activity_id = None
+            self.activity_title = ""
+            self.activity_description = ""
+            self.activity_location = ""
+            self.activity_distance = ""
+            self.activity_date = ""
+            self.activity_time = "10:00"
+            self.activity_max_participants = ""
+
+            self.message = "Activity updated successfully!"
+            self.message_type = "success"
+
+            return rx.redirect(f"/activity/{activity_id}")
+        except Exception as e:
+            self.message = f"Error updating activity: {str(e)}"
             self.message_type = "error"
 
     @rx.var
@@ -414,6 +596,9 @@ class State(rx.State):
 
     @rx.var
     def filtered_activities_json(self) -> str:
+        """Return filtered activities as JSON string for use in JavaScript."""
+        import json
+
         return json.dumps(self.filtered_activities)
 
     @rx.var

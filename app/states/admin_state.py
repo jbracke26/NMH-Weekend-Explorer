@@ -79,6 +79,44 @@ class AdminState(State):
 
         return result
 
+    def get_user_name(self, user_id: int) -> str:
+        """Get user name from user_id for display purposes."""
+        user_file = Path(__file__).parent.parent / "data" / "user.json"
+        if user_file.exists():
+            try:
+                with open(user_file, "r") as f:
+                    users = json.load(f)
+                    for u in users:
+                        if u.get("user_id") == user_id:
+                            return u.get("name", f"User {user_id}")
+            except:
+                pass
+        return f"User {user_id}"
+
+    @rx.var
+    def enhanced_activities(self) -> List[dict]:
+        """Activities with additional information like creator names."""
+        if not self.is_admin:
+            return []
+
+        result = []
+        for activity in self.activities:
+            enhanced = dict(activity)
+            creator_id = activity.get("creator_id")
+            if creator_id:
+                enhanced["creator_name"] = self.get_user_name(creator_id)
+            else:
+                enhanced["creator_name"] = "Unknown"
+
+            # Add participant count
+            participants = activity.get("participants", [])
+            enhanced["participant_count"] = (
+                len(participants) if isinstance(participants, list) else 0
+            )
+
+            result.append(enhanced)
+        return result
+
     def delete_activity_admin(self, activity_id: int):
         if not self.is_admin:
             self.message = "Unauthorized"

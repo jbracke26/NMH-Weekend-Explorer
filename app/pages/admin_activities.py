@@ -22,7 +22,7 @@ def admin_activities():
                 rx.box(
                     rx.vstack(
                         rx.foreach(
-                            AdminState.activities,
+                            AdminState.enhanced_activities,
                             lambda activity: rx.box(
                                 rx.hstack(
                                     rx.vstack(
@@ -34,14 +34,36 @@ def admin_activities():
                                             size="2",
                                             color=COLORS["text_muted"],
                                         ),
+                                        rx.text(
+                                            f"Created by: {activity['creator_name']}",
+                                            size="1",
+                                            color=COLORS["text_muted"],
+                                        ),
                                         align_items="start",
                                         spacing="1",
                                         flex="1",
                                     ),
                                     rx.hstack(
                                         rx.badge(
-                                            "Participants",
+                                            f"{activity['participant_count']} participants",
                                             color_scheme="blue",
+                                        ),
+                                        rx.cond(
+                                            activity["max_participants"],
+                                            rx.badge(
+                                                f"Max: {activity['max_participants']}",
+                                                color_scheme="gray",
+                                                variant="soft",
+                                            ),
+                                        ),
+                                        rx.link(
+                                            rx.button(
+                                                "Edit",
+                                                size="2",
+                                                variant="soft",
+                                                color_scheme="blue",
+                                            ),
+                                            href="/edit/" + activity["id"].to_string(),
                                         ),
                                         rx.button(
                                             rx.icon("trash-2", size=16),

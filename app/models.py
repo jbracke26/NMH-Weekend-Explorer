@@ -35,9 +35,8 @@ class Activity:
     creator_id: Optional[int] = None
     admin_signed_up: bool = False
     chaperone_id: Optional[int] = None
-    latitude: Optional[str] = None
-    longitude: Optional[str] = None
-
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
     @staticmethod
     def load_all() -> List["Activity"]:
