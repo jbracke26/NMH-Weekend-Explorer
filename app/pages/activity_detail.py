@@ -50,7 +50,12 @@ def activity_detail() -> rx.Component:
                                 rx.text(
                                     State.current_activity["location"],
                                     font_weight="medium",
-                                ),
+                                    ),
+                                        href=f"https://www.google.com/maps?q={State.current_activity['latitude']},{State.current_activity['longitude']}",
+                                        is_external=True,  # ensures it opens in a new tab
+                                        text_decoration="none",
+                                        _hover={"opacity": "0.7"},
+                                    ),
                                 rx.spacer(),
                                 rx.icon("calendar", color="gray.500"),
                                 rx.text(
