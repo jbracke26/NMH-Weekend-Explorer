@@ -13,9 +13,9 @@
     ],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
-
   },
   {
     "id": 2,
@@ -29,6 +29,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -44,6 +45,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -59,6 +61,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -74,6 +77,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -89,6 +93,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -104,6 +109,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -119,6 +125,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -134,6 +141,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -149,6 +157,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -164,6 +173,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -179,6 +189,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -194,6 +205,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -209,6 +221,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -224,6 +237,7 @@
     "participants": [],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   },
@@ -241,6 +255,7 @@
     ],
     "creator_id": 1,
     "admin_signed_up": false,
+    "chaperone_id": null,
     "latitude": "42.3251",
     "longitude": "-72.481655"
   }
