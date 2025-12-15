@@ -17,169 +17,206 @@ def create_activity() -> rx.Component:
                 rx.script(
                     f"""
                     (function() {{
-                        console.log('=== Create Activity Map Script Loaded (Always) ===');
+                        console.log('=== Create Activity Map Script Loaded ===');
+                        
+                        // Ensure Google Maps API is loaded with callback
+                        function ensureGoogleMapsApi(callback) {{
+                            // Check if already loaded
+                            if (window.google && window.google.maps && window.google.maps.Map) {{
+                                console.log('Google Maps API already available');
+                                if (callback) callback();
+                                return;
+                            }}
+                            
+                            // Check if script is already being loaded
+                            const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+                            if (existingScript) {{
+                                console.log('Google Maps API script already exists, waiting...');
+                                // Wait for API to be ready
+                                const checkApi = setInterval(function() {{
+                                    if (window.google && window.google.maps && window.google.maps.Map) {{
+                                        clearInterval(checkApi);
+                                        console.log('Google Maps API ready');
+                                        if (callback) callback();
+                                    }}
+                                }}, 100);
+                                
+                                // Timeout after 10 seconds
+                                setTimeout(function() {{
+                                    clearInterval(checkApi);
+                                    if (!window.google || !window.google.maps || !window.google.maps.Map) {{
+                                        console.error('Google Maps API failed to load within timeout');
+                                    }}
+                                }}, 10000);
+                                return;
+                            }}
+                            
+                            // Create callback function
+                            window._createActivityMapApiCallback = function() {{
+                                console.log('Google Maps API loaded via callback');
+                                window.googleMapsApiLoaded = true;
+                                delete window._createActivityMapApiCallback;
+                                if (callback) {{
+                                    // Small delay to ensure everything is ready
+                                    setTimeout(callback, 100);
+                                }}
+                            }};
+                            
+                            // Load the script
+                            const script = document.createElement('script');
+                            script.src = 'https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}&loading=async&callback=_createActivityMapApiCallback';
+                            script.async = true;
+                            script.defer = true;
+                            script.onerror = function() {{
+                                console.error('Failed to load Google Maps API');
+                                delete window._createActivityMapApiCallback;
+                            }};
+                            document.head.appendChild(script);
+                            console.log('Loading Google Maps API...');
+                        }}
                         
                         if (!window.createActivityMapFunctions) {{
                             window.createActivityMap = null;
                             window.createActivityMarker = null;
+                            window.createActivityMapInitialized = false;
+                            window.createActivityMapInitAttempts = 0;
                             
                             window.initCreateActivityMap = function() {{
-                                console.log('initCreateActivityMap called');
+                                // Prevent too many attempts
+                                if (window.createActivityMapInitAttempts > 10) {{
+                                    console.error('Too many map initialization attempts, giving up');
+                                    return;
+                                }}
+                                
+                                window.createActivityMapInitAttempts++;
+                                
                                 const mapContainer = document.getElementById('create_activity_map');
                                 if (!mapContainer) {{
-                                    console.log('create_activity_map container not found, retrying...');
-                                    setTimeout(window.initCreateActivityMap, 200);
+                                    console.log('Map container not found');
                                     return;
                                 }}
-                                console.log('create_activity_map container found, size:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
                                 
-                                if (window.createActivityMap) {{
-                                    console.log('Create activity map already initialized');
-                                    const mapDiv = window.createActivityMap.getDiv();
-                                    if (mapDiv && mapDiv === mapContainer) {{
-                                        console.log('Map is already attached to container');
-                                        return;
-                                    }}
-                                    console.log('Map exists but not attached, reinitializing...');
-                                    window.createActivityMap = null;
-                                    if (window.createActivityMarker) {{
-                                        window.createActivityMarker.setMap(null);
-                                        window.createActivityMarker = null;
-                                    }}
+                                // Check if container is visible
+                                const computedStyle = window.getComputedStyle(mapContainer);
+                                const isVisible = mapContainer.offsetParent !== null && 
+                                                 computedStyle.display !== 'none' &&
+                                                 computedStyle.visibility !== 'hidden' &&
+                                                 mapContainer.offsetWidth > 0 &&
+                                                 mapContainer.offsetHeight > 0;
+                                
+                                if (!isVisible) {{
+                                    console.log('Map container not visible yet');
+                                    return;
                                 }}
                                 
-                                console.log('Initializing create activity map...');
-                                
+                                // Ensure Google Maps API is loaded
                                 if (!window.google || !window.google.maps || !window.google.maps.Map) {{
-                                    console.log('Google Maps API not available, loading...');
-                                    
-                                    // Check if script is already being loaded
-                                    if (document.querySelector('script[src*="maps.googleapis.com"]')) {{
-                                        console.log('Google Maps API script already exists, waiting...');
-                                        setTimeout(window.initCreateActivityMap, 500);
-                                        return;
-                                    }}
-                                    
-                                    const script = document.createElement('script');
-                                    script.src = 'https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}&loading=async&callback=initCreateActivityMapCallback';
-                                    script.async = true;
-                                    script.defer = true;
-                                    
-                                    // Set up global callback
-                                    window.initCreateActivityMapCallback = function() {{
-                                        console.log('Google Maps API callback fired for create activity');
-                                        setTimeout(function() {{
-                                            if (window.google && window.google.maps && window.google.maps.Map) {{
-                                                console.log('Google Maps API fully loaded via callback');
-                                                if (window.initCreateActivityMap) {{
-                                                    window.initCreateActivityMap();
-                                                }}
-                                            }} else {{
-                                                console.log('Maps object still not available, retrying...');
-                                                setTimeout(window.initCreateActivityMap, 200);
-                                            }}
-                                        }}, 100);
-                                    }};
-                                    
-                                    script.onload = function() {{
-                                        console.log('Google Maps API script loaded for create activity');
-                                    }};
-                                    
-                                    script.onerror = function() {{
-                                        console.error('Failed to load Google Maps API for create activity');
-                                        delete window.initCreateActivityMapCallback;
-                                    }};
-                                    
-                                    document.head.appendChild(script);
+                                    console.log('Google Maps API not ready, ensuring it is loaded...');
+                                    ensureGoogleMapsApi(function() {{
+                                        setTimeout(window.initCreateActivityMap, 100);
+                                    }});
                                     return;
+                                }}
+                                
+                                // Prevent double initialization
+                                if (window.createActivityMap && window.createActivityMapInitialized) {{
+                                    try {{
+                                        const mapDiv = window.createActivityMap.getDiv();
+                                        if (mapDiv && mapDiv === mapContainer) {{
+                                            console.log('Map already initialized and attached');
+                                            // Just trigger resize
+                                            setTimeout(function() {{
+                                                if (window.google && window.google.maps && window.google.maps.event && window.createActivityMap) {{
+                                                    window.google.maps.event.trigger(window.createActivityMap, 'resize');
+                                                }}
+                                            }}, 100);
+                                            return;
+                                        }}
+                                    }} catch (e) {{
+                                        console.log('Error checking map attachment, reinitializing...');
+                                        window.cleanupCreateActivityMap();
+                                    }}
                                 }}
                                 
                                 try {{
-                                    if (mapContainer.style.display === 'none') {{
-                                        mapContainer.style.display = 'block';
+                                    // Ensure container has size
+                                    if (mapContainer.offsetWidth < 100) {{
+                                        mapContainer.style.width = '100%';
+                                    }}
+                                    if (mapContainer.offsetHeight < 100) {{
+                                        mapContainer.style.height = '400px';
                                     }}
                                     
-                                    const checkSize = function() {{
-                                        const width = mapContainer.offsetWidth || mapContainer.clientWidth;
-                                        const height = mapContainer.offsetHeight || mapContainer.clientHeight;
-                                        
-                                        if (width === 0 || height === 0) {{
-                                            console.log('Map container has no size yet, waiting...', width, 'x', height);
-                                            setTimeout(checkSize, 100);
-                                            return;
-                                        }}
-                                        
-                                        console.log('Initializing map with container size:', width, 'x', height);
-                                        
-                                        if (!mapContainer.style.width && width < 100) {{
-                                            mapContainer.style.width = '100%';
-                                        }}
-                                        if (!mapContainer.style.height && height < 100) {{
-                                            mapContainer.style.height = '400px';
-                                        }}
-                                        
-                                        window.createActivityMap = new window.google.maps.Map(mapContainer, {{
-                                            zoom: 14,
-                                            center: {{ lat: 42.5364, lng: -72.5278 }},
-                                            mapTypeControl: true,
-                                            streetViewControl: true,
-                                            fullscreenControl: true,
-                                        }});
-                                        
-                                        console.log('Create activity map initialized successfully');
-                                        
-                                        setTimeout(function() {{
-                                            if (window.google && window.google.maps && window.google.maps.event && window.createActivityMap) {{
-                                                window.google.maps.event.trigger(window.createActivityMap, 'resize');
-                                            }}
-                                        }}, 100);
-                                        
-                                        window.createActivityMap.addListener('click', function(event) {{
-                                            const lat = event.latLng.lat();
-                                            const lng = event.latLng.lng();
-                                            
-                                            console.log('Map clicked at:', lat, lng);
-                                            
-                                            if (window.createActivityMarker) {{
-                                                window.createActivityMarker.setPosition(event.latLng);
-                                            }} else {{
-                                                window.createActivityMarker = new window.google.maps.Marker({{
-                                                    position: event.latLng,
-                                                    map: window.createActivityMap,
-                                                    draggable: true,
-                                                    title: 'Activity Location'
-                                                }});
-                                                
-                                                window.createActivityMarker.addListener('dragend', function(event) {{
-                                                    const lat = event.latLng.lat();
-                                                    const lng = event.latLng.lng();
-                                                    console.log('Marker dragged to:', lat, lng);
-                                                    updateLocationFromMap(lat, lng);
-                                                }});
-                                            }}
-                                            
-                                            updateLocationFromMap(lat, lng);
-                                            
-                                            const geocoder = new window.google.maps.Geocoder();
-                                            geocoder.geocode({{ location: event.latLng }}, function(results, status) {{
-                                                if (status === 'OK' && results[0]) {{
-                                                    // Try to find the location input by its placeholder or other attributes
-                                                    const locationInputs = document.querySelectorAll('input[placeholder*="Alumni Hall"], input[placeholder*="e.g.,"]');
-                                                    if (locationInputs.length > 0) {{
-                                                        const addressInput = locationInputs[0];
-                                                        addressInput.value = results[0].formatted_address;
-                                                        const inputEvent = new Event('input', {{ bubbles: true }});
-                                                        addressInput.dispatchEvent(inputEvent);
-                                                    }}
-                                                }}
-                                            }});
-                                        }});
-                                    }};
+                                    // Wait a bit more if container still doesn't have proper size
+                                    if (mapContainer.offsetWidth < 100 || mapContainer.offsetHeight < 100) {{
+                                        setTimeout(window.initCreateActivityMap, 200);
+                                        return;
+                                    }}
                                     
-                                    checkSize();
+                                    console.log('Initializing map with container size:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
+                                    
+                                    // Initialize map
+                                    window.createActivityMap = new window.google.maps.Map(mapContainer, {{
+                                        zoom: 14,
+                                        center: {{ lat: 42.5364, lng: -72.5278 }},
+                                        mapTypeControl: true,
+                                        streetViewControl: true,
+                                        fullscreenControl: true,
+                                    }});
+                                    
+                                    // Trigger resize after a short delay
+                                    setTimeout(function() {{
+                                        if (window.google && window.google.maps && window.google.maps.event && window.createActivityMap) {{
+                                            window.google.maps.event.trigger(window.createActivityMap, 'resize');
+                                        }}
+                                    }}, 200);
+                                    
+                                    // Add click listener
+                                    window.createActivityMap.addListener('click', function(event) {{
+                                        const lat = event.latLng.lat();
+                                        const lng = event.latLng.lng();
+                                        
+                                        if (window.createActivityMarker) {{
+                                            window.createActivityMarker.setPosition(event.latLng);
+                                        }} else {{
+                                            window.createActivityMarker = new window.google.maps.Marker({{
+                                                position: event.latLng,
+                                                map: window.createActivityMap,
+                                                draggable: true,
+                                                title: 'Activity Location'
+                                            }});
+                                            
+                                            window.createActivityMarker.addListener('dragend', function(event) {{
+                                                const lat = event.latLng.lat();
+                                                const lng = event.latLng.lng();
+                                                updateLocationFromMap(lat, lng);
+                                            }});
+                                        }}
+                                        
+                                        updateLocationFromMap(lat, lng);
+                                        
+                                        const geocoder = new window.google.maps.Geocoder();
+                                        geocoder.geocode({{ location: event.latLng }}, function(results, status) {{
+                                            if (status === 'OK' && results[0]) {{
+                                                const addressInput = document.querySelector('#activity_location_input');
+                                                if (addressInput) {{
+                                                    addressInput.value = results[0].formatted_address;
+                                                    addressInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                                                }}
+                                            }}
+                                        }});
+                                    }});
+                                    
+                                    window.createActivityMapInitialized = true;
+                                    window.createActivityMapInitAttempts = 0;
+                                    console.log('Create activity map initialized successfully');
                                 }} catch (error) {{
                                     console.error('Error initializing create activity map:', error);
-                                    setTimeout(window.initCreateActivityMap, 500);
+                                    window.createActivityMapInitialized = false;
+                                    // Retry after a delay
+                                    setTimeout(function() {{
+                                        window.initCreateActivityMap();
+                                    }}, 500);
                                 }}
                             }};
                             
@@ -188,8 +225,7 @@ def create_activity() -> rx.Component:
                                 const latStr = lat.toString();
                                 const lngStr = lng.toString();
                                 
-                                // Store coordinates in a way that Reflex can access
-                                // Use window object to store values temporarily
+                                // Store coordinates in window object as backup
                                 window._tempLatitude = latStr;
                                 window._tempLongitude = lngStr;
                                 
@@ -198,38 +234,39 @@ def create_activity() -> rx.Component:
                                 const lngInput = document.getElementById('activity_longitude_hidden');
                                 
                                 if (latInput && lngInput) {{
-                                    // Set value using setAttribute for hidden inputs
-                                    latInput.setAttribute('value', latStr);
-                                    lngInput.setAttribute('value', lngStr);
+                                    // Set value directly first
                                     latInput.value = latStr;
                                     lngInput.value = lngStr;
                                     
+                                    // Also set attribute for compatibility
+                                    latInput.setAttribute('value', latStr);
+                                    lngInput.setAttribute('value', lngStr);
+                                    
                                     console.log('Setting hidden inputs:', latInput.value, lngInput.value);
                                     
-                                    // Create and dispatch change events with proper React/Reflex compatibility
-                                    const createSyntheticEvent = function(input, value, eventType) {{
-                                        const event = new Event(eventType, {{ 
-                                            bubbles: true, 
+                                    // Create React-compatible synthetic events
+                                    const createReactEvent = function(input, value, eventType) {{
+                                        // Create a native event first
+                                        const nativeEvent = document.createEvent('Event');
+                                        nativeEvent.initEvent(eventType, true, true);
+                                        
+                                        // Create a synthetic event object that React/Reflex expects
+                                        const syntheticEvent = {{
+                                            target: input,
+                                            currentTarget: input,
+                                            type: eventType,
+                                            bubbles: true,
                                             cancelable: true,
-                                            composed: true
-                                        }});
+                                            defaultPrevented: false,
+                                            eventPhase: 2,
+                                            isTrusted: false,
+                                            nativeEvent: nativeEvent,
+                                            preventDefault: function() {{ nativeEvent.preventDefault(); }},
+                                            stopPropagation: function() {{ nativeEvent.stopPropagation(); }},
+                                            timeStamp: Date.now()
+                                        }};
                                         
-                                        // Set properties that React/Reflex expects
-                                        Object.defineProperty(event, 'target', {{ 
-                                            value: input, 
-                                            enumerable: true,
-                                            configurable: true,
-                                            writable: false
-                                        }});
-                                        
-                                        Object.defineProperty(event, 'currentTarget', {{ 
-                                            value: input, 
-                                            enumerable: true,
-                                            configurable: true,
-                                            writable: false
-                                        }});
-                                        
-                                        // Set the value property on the target
+                                        // Ensure the value is set on the target
                                         Object.defineProperty(input, 'value', {{
                                             value: value,
                                             writable: true,
@@ -237,20 +274,62 @@ def create_activity() -> rx.Component:
                                             enumerable: true
                                         }});
                                         
-                                        return event;
+                                        return syntheticEvent;
                                     }};
                                     
-                                    // Dispatch both input and change events
-                                    const latChangeEvent = createSyntheticEvent(latInput, latStr, 'change');
-                                    const lngChangeEvent = createSyntheticEvent(lngInput, lngStr, 'change');
-                                    const latInputEvent = createSyntheticEvent(latInput, latStr, 'input');
-                                    const lngInputEvent = createSyntheticEvent(lngInput, lngStr, 'input');
+                                    // Try multiple event dispatch methods
+                                    try {{
+                                        // Method 1: Native events
+                                        const latChangeEvent = new Event('change', {{ bubbles: true, cancelable: true }});
+                                        const lngChangeEvent = new Event('change', {{ bubbles: true, cancelable: true }});
+                                        const latInputEvent = new Event('input', {{ bubbles: true, cancelable: true }});
+                                        const lngInputEvent = new Event('input', {{ bubbles: true, cancelable: true }});
+                                        
+                                        // Set value on target before dispatching
+                                        Object.defineProperty(latChangeEvent, 'target', {{ value: latInput, enumerable: true }});
+                                        Object.defineProperty(lngChangeEvent, 'target', {{ value: lngInput, enumerable: true }});
+                                        Object.defineProperty(latInputEvent, 'target', {{ value: latInput, enumerable: true }});
+                                        Object.defineProperty(lngInputEvent, 'target', {{ value: lngInput, enumerable: true }});
+                                        
+                                        // Dispatch events
+                                        latInput.dispatchEvent(latInputEvent);
+                                        latInput.dispatchEvent(latChangeEvent);
+                                        lngInput.dispatchEvent(lngInputEvent);
+                                        lngInput.dispatchEvent(lngChangeEvent);
+                                        
+                                        console.log('Native events dispatched');
+                                    }} catch (e) {{
+                                        console.error('Error dispatching native events:', e);
+                                    }}
                                     
-                                    // Dispatch events in sequence
-                                    latInput.dispatchEvent(latInputEvent);
-                                    latInput.dispatchEvent(latChangeEvent);
-                                    lngInput.dispatchEvent(lngInputEvent);
-                                    lngInput.dispatchEvent(lngChangeEvent);
+                                    // Also try React's event system if available
+                                    if (window.React && window.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED) {{
+                                        try {{
+                                            const ReactDOM = window.ReactDOM || (window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers);
+                                            if (ReactDOM) {{
+                                                const latSynthetic = createReactEvent(latInput, latStr, 'change');
+                                                const lngSynthetic = createReactEvent(lngInput, lngStr, 'change');
+                                                // React handles this internally, so we just dispatch native events
+                                            }}
+                                        }} catch (e) {{
+                                            console.log('React event system not available or error:', e);
+                                        }}
+                                    }}
+                                    
+                                    // Force a blur event to trigger state update
+                                    setTimeout(function() {{
+                                        latInput.focus();
+                                        latInput.blur();
+                                        lngInput.focus();
+                                        lngInput.blur();
+                                        
+                                        // Dispatch one more change event after blur
+                                        const finalChange = new Event('change', {{ bubbles: true, cancelable: true }});
+                                        latInput.dispatchEvent(finalChange);
+                                        lngInput.dispatchEvent(finalChange);
+                                        
+                                        console.log('Final events dispatched after blur');
+                                    }}, 50);
                                     
                                     console.log('Events dispatched, final values:', latInput.value, lngInput.value);
                                     
@@ -258,7 +337,7 @@ def create_activity() -> rx.Component:
                                     setTimeout(function() {{
                                         console.log('Verification - latInput.value:', latInput.value, 'lngInput.value:', lngInput.value);
                                         console.log('Window temp values - lat:', window._tempLatitude, 'lng:', window._tempLongitude);
-                                    }}, 200);
+                                    }}, 300);
                                 }} else {{
                                     console.error('Hidden inputs not found! Storing in window object only.');
                                 }}
@@ -275,135 +354,220 @@ def create_activity() -> rx.Component:
                                     }}
                                     window.createActivityMap = null;
                                 }}
-                                console.log('Create activity map cleaned up');
+                                window.createActivityMapInitialized = false;
+                                window.createActivityMapInitAttempts = 0;
                             }};
                             
-                            function checkAndInitMap() {{
+                            // Function to force map initialization when container becomes visible
+                            window.forceInitCreateActivityMap = function() {{
                                 const mapContainer = document.getElementById('create_activity_map');
-                                if (mapContainer) {{
-                                    // Force display block if container exists
-                                    const computedStyle = window.getComputedStyle(mapContainer);
-                                    if (computedStyle.display === 'none' || mapContainer.style.display === 'none') {{
-                                        mapContainer.style.display = 'block';
-                                        console.log('Forced display block on map container');
-                                    }}
-                                    
-                                    // Wait a bit for display to take effect, then check visibility
-                                    setTimeout(function() {{
-                                        const isVisible = mapContainer.offsetParent !== null && 
-                                                         mapContainer.style.display !== 'none' &&
-                                                         window.getComputedStyle(mapContainer).display !== 'none' &&
-                                                         window.getComputedStyle(mapContainer).visibility !== 'hidden' &&
-                                                         mapContainer.offsetWidth > 0 &&
-                                                         mapContainer.offsetHeight > 0;
-                                        
-                                        console.log('checkAndInitMap - container found, visible:', isVisible, 'size:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
-                                        
-                                        if (isVisible) {{
-                                            if (!window.createActivityMap) {{
-                                                console.log('Map not initialized, calling initCreateActivityMap...');
-                                                window.initCreateActivityMap();
-                                            }} else {{
-                                                try {{
-                                                    const mapDiv = window.createActivityMap.getDiv();
-                                                    if (!mapDiv || mapDiv !== mapContainer) {{
-                                                        console.log('Map exists but not attached to container, reinitializing...');
-                                                        window.cleanupCreateActivityMap();
-                                                        setTimeout(function() {{
-                                                            window.initCreateActivityMap();
-                                                        }}, 100);
-                                                    }} else {{
-                                                        setTimeout(function() {{
-                                                            if (window.google && window.google.maps && window.google.maps.event && window.createActivityMap) {{
-                                                                window.google.maps.event.trigger(window.createActivityMap, 'resize');
-                                                            }}
-                                                        }}, 100);
-                                                    }}
-                                                }} catch (e) {{
-                                                    console.error('Error checking map attachment:', e);
-                                                    window.cleanupCreateActivityMap();
-                                                    setTimeout(function() {{
-                                                        window.initCreateActivityMap();
-                                                    }}, 100);
+                                if (!mapContainer) {{
+                                    return;
+                                }}
+                                
+                                // Reset initialization flag if container was hidden
+                                const computedStyle = window.getComputedStyle(mapContainer);
+                                const isVisible = mapContainer.offsetParent !== null && 
+                                                 computedStyle.display !== 'none' &&
+                                                 computedStyle.visibility !== 'hidden';
+                                
+                                if (!isVisible) {{
+                                    window.createActivityMapInitialized = false;
+                                    window.createActivityMapInitAttempts = 0;
+                                    return;
+                                }}
+                                
+                                // If already initialized and attached, just trigger resize
+                                if (window.createActivityMap && window.createActivityMapInitialized) {{
+                                    try {{
+                                        const mapDiv = window.createActivityMap.getDiv();
+                                        if (mapDiv && mapDiv === mapContainer) {{
+                                            setTimeout(function() {{
+                                                if (window.google && window.google.maps && window.google.maps.event && window.createActivityMap) {{
+                                                    window.google.maps.event.trigger(window.createActivityMap, 'resize');
                                                 }}
-                                            }}
-                                        }} else {{
-                                            if (window.createActivityMap) {{
-                                                console.log('Container not visible, cleaning up map...');
-                                                window.cleanupCreateActivityMap();
-                                            }}
+                                            }}, 100);
+                                            return;
                                         }}
-                                    }}, 50);
-                                }} else {{
-                                    if (window.createActivityMap) {{
-                                        console.log('Container not found, cleaning up map...');
+                                    }} catch (e) {{
+                                        console.log('Error checking map attachment, reinitializing...');
                                         window.cleanupCreateActivityMap();
                                     }}
                                 }}
-                            }}
+                                
+                                // Ensure Google Maps API is loaded first
+                                if (!window.google || !window.google.maps || !window.google.maps.Map) {{
+                                    ensureGoogleMapsApi(function() {{
+                                        window.forceInitCreateActivityMap();
+                                    }});
+                                    return;
+                                }}
+                                
+                                // Wait for container to have size, then initialize
+                                const checkAndInit = function(attempts) {{
+                                    if (attempts > 30) {{
+                                        console.log('Gave up initializing map after', attempts, 'attempts');
+                                        return;
+                                    }}
+                                    
+                                    const width = mapContainer.offsetWidth || mapContainer.clientWidth;
+                                    const height = mapContainer.offsetHeight || mapContainer.clientHeight;
+                                    
+                                    if (width > 0 && height > 0) {{
+                                        window.initCreateActivityMap();
+                                    }} else {{
+                                        setTimeout(function() {{
+                                            checkAndInit(attempts + 1);
+                                        }}, 100);
+                                    }}
+                                }};
+                                
+                                checkAndInit(0);
+                            }};
                             
+                            // Watch for map container visibility changes with MutationObserver
                             const observer = new MutationObserver(function(mutations) {{
                                 const mapContainer = document.getElementById('create_activity_map');
                                 if (mapContainer) {{
-                                    console.log('MutationObserver detected change, checking map...');
-                                    checkAndInitMap();
+                                    window.forceInitCreateActivityMap();
                                 }}
                             }});
                             
-                            observer.observe(document.body, {{
-                                childList: true,
-                                subtree: true,
-                                attributes: true,
-                                attributeFilter: ['style', 'class', 'display', 'id']
-                            }});
-                            
-                            console.log('=== Starting create activity map initialization ===');
-                            
-                            // Initial check
-                            setTimeout(function() {{
-                                checkAndInitMap();
-                            }}, 100);
-                            
-                            let checkCount = 0;
-                            const checkInterval = setInterval(function() {{
-                                checkCount++;
-                                const mapContainer = document.getElementById('create_activity_map');
-                                if (mapContainer) {{
-                                    // Force display block
-                                    const computedStyle = window.getComputedStyle(mapContainer);
-                                    if (computedStyle.display === 'none' || mapContainer.style.display === 'none') {{
-                                        mapContainer.style.display = 'block';
-                                    }}
-                                    
-                                    // Check if container is visible and has size
-                                    const isVisible = mapContainer.offsetParent !== null && 
-                                                     mapContainer.offsetWidth > 0 && 
-                                                     mapContainer.offsetHeight > 0;
-                                    
-                                    if (isVisible) {{
-                                        checkAndInitMap();
-                                        if (window.createActivityMap && checkCount > 5) {{
-                                            clearInterval(checkInterval);
-                                            console.log('Map initialized, stopping frequent checks');
-                                        }}
-                                    }} else if (checkCount % 10 === 0) {{
-                                        console.log('Map container exists but not visible yet, check:', checkCount, 'size:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
-                                    }}
-                                }} else if (checkCount % 20 === 0) {{
-                                    console.log('Map container not found yet, check:', checkCount);
-                                }}
-                                if (checkCount > 200) {{
-                                    clearInterval(checkInterval);
-                                    console.log('Stopped checking after', checkCount, 'attempts');
-                                }}
-                            }}, 300);
-                            
+                            // Start observing when DOM is ready
                             if (document.readyState === 'loading') {{
                                 document.addEventListener('DOMContentLoaded', function() {{
-                                    setTimeout(checkAndInitMap, 500);
+                                    observer.observe(document.body, {{
+                                        childList: true,
+                                        subtree: true,
+                                        attributes: true,
+                                        attributeFilter: ['style', 'class', 'display', 'id']
+                                    }});
+                                    
+                                    // Initial check after DOM is ready
+                                    setTimeout(function() {{
+                                        window.forceInitCreateActivityMap();
+                                    }}, 200);
                                 }});
                             }} else {{
-                                setTimeout(checkAndInitMap, 500);
+                                observer.observe(document.body, {{
+                                    childList: true,
+                                    subtree: true,
+                                    attributes: true,
+                                    attributeFilter: ['style', 'class', 'display', 'id']
+                                }});
+                                
+                                // Initial check
+                                setTimeout(function() {{
+                                    window.forceInitCreateActivityMap();
+                                }}, 200);
+                            }}
+                            
+                            // Watch for switch changes and initialize map immediately
+                            const watchSwitch = function() {{
+                                const switchElement = document.querySelector('input[type="checkbox"][id*="use_map"], input[type="checkbox"]');
+                                if (switchElement) {{
+                                    switchElement.addEventListener('change', function() {{
+                                        console.log('Switch toggled, forcing map initialization...');
+                                        setTimeout(function() {{
+                                            window.forceInitCreateActivityMap();
+                                        }}, 300);
+                                    }});
+                                }} else {{
+                                    setTimeout(watchSwitch, 200);
+                                }}
+                            }};
+                            
+                            // Start watching for switch after DOM is ready
+                            if (document.readyState === 'loading') {{
+                                document.addEventListener('DOMContentLoaded', watchSwitch);
+                            }} else {{
+                                watchSwitch();
+                            }}
+                            
+                            // Aggressive polling when map container exists but map is not initialized
+                            let checkCount = 0;
+                            const aggressiveCheck = setInterval(function() {{
+                                checkCount++;
+                                const mapContainer = document.getElementById('create_activity_map');
+                                
+                                if (mapContainer) {{
+                                    const computedStyle = window.getComputedStyle(mapContainer);
+                                    const isVisible = mapContainer.offsetParent !== null && 
+                                                     computedStyle.display !== 'none' &&
+                                                     computedStyle.visibility !== 'hidden' &&
+                                                     mapContainer.offsetWidth > 0 &&
+                                                     mapContainer.offsetHeight > 0;
+                                    
+                                    if (isVisible && !window.createActivityMapInitialized) {{
+                                        window.forceInitCreateActivityMap();
+                                    }}
+                                    
+                                    // Stop aggressive checking after map is initialized or after many attempts
+                                    if ((window.createActivityMapInitialized && isVisible) || checkCount > 50) {{
+                                        clearInterval(aggressiveCheck);
+                                    }}
+                                }} else if (checkCount > 50) {{
+                                    clearInterval(aggressiveCheck);
+                                }}
+                            }}, 150);
+                            
+                            // Intercept create activity button click to ensure coordinates are synced
+                            function setupCreateButtonInterceptor() {{
+                                const createButton = document.getElementById('create_activity_button');
+                                if (createButton) {{
+                                    createButton.addEventListener('click', function(e) {{
+                                        console.log('Create Activity button clicked, checking coordinates...');
+                                        
+                                        // Get coordinates from hidden inputs or window object
+                                        const latInput = document.getElementById('activity_latitude_hidden');
+                                        const lngInput = document.getElementById('activity_longitude_hidden');
+                                        
+                                        let latStr = '';
+                                        let lngStr = '';
+                                        
+                                        if (latInput && lngInput) {{
+                                            latStr = latInput.value || '';
+                                            lngStr = lngInput.value || '';
+                                        }}
+                                        
+                                        // Fallback to window object if inputs are empty
+                                        if (!latStr || !lngStr) {{
+                                            latStr = window._tempLatitude || '';
+                                            lngStr = window._tempLongitude || '';
+                                            
+                                            // If we have coordinates from window, update the inputs
+                                            if (latStr && lngStr && latInput && lngInput) {{
+                                                latInput.value = latStr;
+                                                lngInput.value = lngStr;
+                                                
+                                                // Dispatch events to update Reflex state
+                                                const latEvent = new Event('change', {{ bubbles: true }});
+                                                const lngEvent = new Event('change', {{ bubbles: true }});
+                                                latInput.dispatchEvent(latEvent);
+                                                lngInput.dispatchEvent(lngEvent);
+                                                
+                                                console.log('Updated coordinates from window object:', latStr, lngStr);
+                                            }}
+                                        }}
+                                        
+                                        console.log('Final coordinates before submit:', latStr, lngStr);
+                                        
+                                        // Small delay to ensure state is updated
+                                        setTimeout(function() {{
+                                            // The button click will proceed normally
+                                        }}, 100);
+                                    }}, true); // Use capture phase
+                                }} else {{
+                                    // Retry if button not found yet
+                                    setTimeout(setupCreateButtonInterceptor, 500);
+                                }}
+                            }}
+                            
+                            // Setup interceptor when DOM is ready
+                            if (document.readyState === 'loading') {{
+                                document.addEventListener('DOMContentLoaded', setupCreateButtonInterceptor);
+                            }} else {{
+                                setupCreateButtonInterceptor();
                             }}
                             
                             window.createActivityMapFunctions = true;
@@ -499,34 +663,17 @@ def create_activity() -> rx.Component:
                             width="100%",
                             align_items="start",
                         ),
-                        rx.hstack(
                             rx.vstack(
-                                rx.text(
-                                    "Log Location on Map?",
-                                    weight="bold",
-                                    size="2",
-                                    margin_bottom="1",
-                                ),
+                            rx.text("Set Location on Map", weight="bold", size="2", margin_bottom="1"),
+                            rx.hstack(
+                                rx.text("Use interactive map?", weight="bold", size="2"),
                                 rx.switch(
-                                    is_checked=State.activity_log_location,
-                                    on_change=State.set_activity_log_location,
+                                    is_checked=State.use_map_for_location,
+                                    on_change=State.set_use_map_for_location,
+                                    id="use_map_switch",
                                 ),
-                                rx.cond(
-                                    State.activity_log_location,
-                                    rx.link(
-                                        "What are coordinates?",
-                                        href="https://en.wikipedia.org/wiki/Geographic_coordinate_system",
-                                        is_external=True,
-                                        color="blue",
-                                        margin_left="2",
-                                    ),
-                                ),
+                                spacing="2",
                                 align_items="center",
-                                width="100%",
-                            ),
-                            rx.switch(
-                                is_checked=State.activity_log_location,
-                                on_change=State.set_activity_log_location,
                             ),
                             rx.cond(
                                 State.use_map_for_location,
@@ -536,15 +683,17 @@ def create_activity() -> rx.Component:
                                         rx.fragment(
                                             rx.input(
                                                 id="activity_latitude_hidden",
-                                                type="hidden",
+                                                type="text",
                                                 value=State.activity_latitude,
                                                 on_change=State.set_activity_latitude,
+                                                display="none",
                                             ),
                                             rx.input(
                                                 id="activity_longitude_hidden",
-                                                type="hidden",
+                                                type="text",
                                                 value=State.activity_longitude,
                                                 on_change=State.set_activity_longitude,
+                                                display="none",
                                             ),
                                             rx.box(
                                                 id="create_activity_map",
@@ -576,15 +725,9 @@ def create_activity() -> rx.Component:
                                         ),
                                     ),
                                 ),
-                                rx.switch(
-                                    is_checked=State.activity_needs_chaperone,
-                                    on_change=State.set_activity_needs_chaperone,
-                                ),
-                                align_items="center",
-                                width="100%",
                             ),
                             width="100%",
-                            spacing="4",
+                            align_items="start",
                         ),
                         rx.cond(
                             State.activity_log_location,
@@ -672,6 +815,7 @@ def create_activity() -> rx.Component:
                         ),
                         rx.button(
                             "Create Activity",
+                            id="create_activity_button",
                             on_click=State.create_activity,
                             size="3",
                             width="100%",
