@@ -7,10 +7,6 @@ load_dotenv(basedir / ".env")
 
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY") or "dev-secret-key-change-in-production"
-    DATABASE_URL = (
-        os.environ.get("DATABASE_URL") or f"sqlite:///{basedir}/instance/app.db"
-    )
 
     GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID") or ""
     GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET") or ""

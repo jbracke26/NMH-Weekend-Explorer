@@ -61,7 +61,7 @@ def header() -> rx.Component:
                             rx.text("Student", size="2"),
                             google_oauth_provider(
                                 google_login(
-                                    on_success=State.on_google_login_success,
+                                    on_success=State.on_student_login_success,
                                 ),
                                 client_id=GOOGLE_CLIENT_ID,
                             ),
@@ -72,7 +72,7 @@ def header() -> rx.Component:
                             rx.text("Teacher", size="2"),
                             google_oauth_provider(
                                 google_login(
-                                    on_success=State.on_google_login_success,
+                                    on_success=State.on_teacher_login_success,
                                 ),
                                 client_id=GOOGLE_CLIENT_ID,
                             ),
@@ -103,6 +103,53 @@ def header() -> rx.Component:
 def layout(content: rx.Component, **kwargs) -> rx.Component:
     return rx.vstack(
         header(),
+        # Message display
+        rx.cond(
+            State.message != "",
+            rx.box(
+                rx.hstack(
+                    rx.text(
+                        State.message,
+                        size="2",
+                        color=rx.cond(
+                            State.message_type == "error",
+                            "red",
+                            rx.cond(
+                                State.message_type == "success",
+                                "green",
+                                "blue"
+                            )
+                        ),
+                        weight="medium",
+                    ),
+                    rx.button(
+                        "×",
+                        on_click=lambda: State.set_message(""),
+                        size="1",
+                        variant="ghost",
+                        color="gray",
+                    ),
+                    justify="between",
+                    align="center",
+                    width="100%",
+                ),
+                width="100%",
+                max_width="1200px",
+                margin="0 auto",
+                padding="3",
+                background=rx.cond(
+                    State.message_type == "error",
+                    "var(--red-3)",
+                    rx.cond(
+                        State.message_type == "success",
+                        "var(--green-3)",
+                        "var(--blue-3)"
+                    )
+                ),
+                border_radius="6px",
+                margin_top="2",
+            ),
+        ),
         rx.box(
             content,
             width="100%",

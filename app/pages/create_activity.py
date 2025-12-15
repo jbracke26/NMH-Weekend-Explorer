@@ -667,7 +667,12 @@ def create_activity() -> rx.Component:
                                     on_change=State.set_use_map_for_location,
                                     id="use_map_switch",
                                 ),
-                                spacing="2",
+                                rx.text("Needs chaperone?", weight="bold", size="2"),
+                                rx.switch(
+                                    is_checked=State.activity_needs_chaperone,
+                                    on_change=State.set_activity_needs_chaperone,
+                                ),
+                                spacing="4",
                                 align_items="center",
                             ),
                             rx.cond(
