@@ -77,7 +77,6 @@ class State(rx.State):
         if activity_id:
             if not self.activities:
                 self.load_activities()
-
             try:
                 aid = int(activity_id)
                 for a in self.activities:
@@ -173,6 +172,45 @@ class State(rx.State):
             self.message = f"Error leaving activity: {e}"
             self.message_type = "error"
 
+    def toggle_chaperone(self):
+        if not self.is_authenticated:
+            self.message = "Please log in to manage chaperones."
+            self.message_type = "error"
+            return
+
+        if not self.is_admin:
+            self.message = "Only teachers can sign up as chaperones."
+            self.message_type = "error"
+            return
+
+        if not self.current_activity:
+            return
+
+        try:
+            acts = load_activities()
+            for a in acts:
+                if a.id == self.current_activity["id"]:
+                    current_chaperone = getattr(a, "chaperone_id", None)
+                    if current_chaperone == self.current_user_id:
+                        a.chaperone_id = None
+                        a.admin_signed_up = False
+                        self.current_activity["chaperone_id"] = None
+                        self.current_activity["admin_signed_up"] = False
+                        self.message = "You are no longer chaperoning this activity."
+                    else:
+                        a.chaperone_id = self.current_user_id
+                        a.admin_signed_up = True
+                        self.current_activity["chaperone_id"] = self.current_user_id
+                        self.current_activity["admin_signed_up"] = True
+                        self.message = "You are now chaperoning this activity."
+                    self.message_type = "success"
+                    save_activities(acts)
+                    self.load_activities()
+                    return
+        except Exception as e:
+            self.message = f"Error updating chaperone: {e}"
+            self.message_type = "error"
+
     def load_activities(self):
         acts = load_activities()
         self.activities = [
@@ -187,6 +225,8 @@ class State(rx.State):
                 "max_participants": a.max_participants,
                 "participants": a.participants or [],
                 "creator_id": a.creator_id,
+                "admin_signed_up": getattr(a, "admin_signed_up", False),
+                "chaperone_id": getattr(a, "chaperone_id", None),
             }
             for a in acts
         ]
@@ -235,6 +275,8 @@ class State(rx.State):
                 max_participants=max_participants,
                 participants=[],
                 creator_id=self.current_user_id,
+                admin_signed_up=False,
+                chaperone_id=None,
             )
 
             acts.append(new_activity)
@@ -464,8 +506,12 @@ class State(rx.State):
         for activity in activities:
             activity_copy = dict(activity)
             participants = activity_copy.get("participants", [])
-            activity_copy["participants_count"] = (
-                len(participants) if isinstance(participants, list) else 0
+            if isinstance(participants, list):
+                activity_copy["participants_count"] = len(participants)
+            else:
+                activity_copy["participants_count"] = 0
+            activity_copy["admin_signed_up"] = activity_copy.get(
+                "admin_signed_up", False
             )
             result.append(activity_copy)
         return result
