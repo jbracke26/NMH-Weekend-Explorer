@@ -97,7 +97,12 @@ def create_activity() -> rx.Component:
                             align_items="start",
                         ),
                         rx.vstack(
-                            rx.text("Log Location on Map?", weight="bold", size="2", margin_bottom="1"),
+                            rx.text(
+                                "Log Location on Map?",
+                                weight="bold",
+                                size="2",
+                                margin_bottom="1",
+                            ),
                             rx.switch(
                                 is_checked=State.activity_log_location,
                                 on_change=State.set_activity_log_location,
@@ -113,15 +118,18 @@ def create_activity() -> rx.Component:
                                 ),
                             ),
                             align_items="center",
-                        ),
                             width="100%",
-                            align_items="start",
                         ),
                         rx.cond(
                             State.activity_log_location,
                             rx.hstack(
                                 rx.vstack(
-                                    rx.text("Latitude", weight="bold", size="2", margin_bottom="1"),
+                                    rx.text(
+                                        "Latitude",
+                                        weight="bold",
+                                        size="2",
+                                        margin_bottom="1",
+                                    ),
                                     rx.input(
                                         placeholder="e.g., 42.667144",
                                         value=State.activity_latitude,
@@ -132,7 +140,12 @@ def create_activity() -> rx.Component:
                                     align_items="start",
                                 ),
                                 rx.vstack(
-                                    rx.text("Longitude", weight="bold", size="2", margin_bottom="1"),
+                                    rx.text(
+                                        "Longitude",
+                                        weight="bold",
+                                        size="2",
+                                        margin_bottom="1",
+                                    ),
                                     rx.input(
                                         placeholder="e.g., -72.481655",
                                         value=State.activity_longitude,

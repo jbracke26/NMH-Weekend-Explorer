@@ -61,7 +61,7 @@ def header() -> rx.Component:
                             rx.text("Student", size="2"),
                             google_oauth_provider(
                                 google_login(
-                                    on_success=State.on_student_login_success,
+                                    on_success=State.on_google_login_success,
                                 ),
                                 client_id=GOOGLE_CLIENT_ID,
                             ),
@@ -72,7 +72,7 @@ def header() -> rx.Component:
                             rx.text("Teacher", size="2"),
                             google_oauth_provider(
                                 google_login(
-                                    on_success=State.on_teacher_login_success,
+                                    on_success=State.on_google_login_success,
                                 ),
                                 client_id=GOOGLE_CLIENT_ID,
                             ),

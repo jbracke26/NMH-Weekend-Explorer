@@ -31,6 +31,9 @@ class State(rx.State):
     activity_date: str = ""
     activity_time: str = "10:00"
     activity_max_participants: str = ""
+    activity_log_location: bool = False
+    activity_latitude: str = ""
+    activity_longitude: str = ""
 
     message: str = ""
     message_type: str = "info"
@@ -227,6 +230,8 @@ class State(rx.State):
                 "creator_id": a.creator_id,
                 "admin_signed_up": getattr(a, "admin_signed_up", False),
                 "chaperone_id": getattr(a, "chaperone_id", None),
+                "latitude": getattr(a, "latitude", None),
+                "longitude": getattr(a, "longitude", None),
             }
             for a in acts
         ]
@@ -264,6 +269,21 @@ class State(rx.State):
                 else ""
             )
 
+            # Parse latitude and longitude if provided
+            latitude = None
+            longitude = None
+            if self.activity_log_location:
+                if self.activity_latitude and self.activity_latitude.strip():
+                    try:
+                        latitude = float(self.activity_latitude)
+                    except ValueError:
+                        pass
+                if self.activity_longitude and self.activity_longitude.strip():
+                    try:
+                        longitude = float(self.activity_longitude)
+                    except ValueError:
+                        pass
+
             new_activity = Activity(
                 id=self._next_id(),
                 title=self.activity_title,
@@ -277,6 +297,8 @@ class State(rx.State):
                 creator_id=self.current_user_id,
                 admin_signed_up=False,
                 chaperone_id=None,
+                latitude=latitude,
+                longitude=longitude,
             )
 
             acts.append(new_activity)
@@ -310,6 +332,9 @@ class State(rx.State):
         self.activity_date = ""
         self.activity_time = "10:00"
         self.activity_max_participants = ""
+        self.activity_log_location = False
+        self.activity_latitude = ""
+        self.activity_longitude = ""
 
     def load_activity_for_edit(self):
         """Load activity data into form fields for editing."""
