@@ -47,15 +47,23 @@ def activity_detail() -> rx.Component:
                             ),
                             rx.hstack(
                                 rx.icon("map-pin", color="gray.500"),
-                                rx.text(
-                                    State.current_activity["location"],
-                                    font_weight="medium",
-                                    ),
+                                rx.cond(
+                                    (State.current_activity.get("latitude") != None) & (State.current_activity.get("longitude") != None),
+                                    rx.link(
+                                        rx.text(
+                                            State.current_activity["location"],
+                                            font_weight="medium",
+                                        ),
                                         href=f"https://www.google.com/maps?q={State.current_activity['latitude']},{State.current_activity['longitude']}",
-                                        is_external=True,  # ensures it opens in a new tab
+                                        is_external=True,
                                         text_decoration="none",
                                         _hover={"opacity": "0.7"},
                                     ),
+                                    rx.text(
+                                        State.current_activity["location"],
+                                        font_weight="medium",
+                                    ),
+                                ),
                                 rx.spacer(),
                                 rx.icon("calendar", color="gray.500"),
                                 rx.text(

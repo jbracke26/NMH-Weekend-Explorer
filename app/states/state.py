@@ -34,6 +34,7 @@ class State(rx.State):
     activity_log_location: bool = False
     activity_latitude: str = ""
     activity_longitude: str = ""
+    use_map_for_location: bool = False
     activity_needs_chaperone: bool = False
 
     message: str = ""
@@ -336,23 +337,37 @@ class State(rx.State):
                 else ""
             )
 
-            # parse coordinates if provided
+            # parse coordinates if provided (only if map was used)
             latitude = None
             longitude = None
-            if self.activity_log_location:
-                try:
-                    latitude = (
-                        float(self.activity_latitude)
-                        if self.activity_latitude
-                        else None
-                    )
-                    longitude = (
-                        float(self.activity_longitude)
-                        if self.activity_longitude
-                        else None
-                    )
-                except ValueError:
-                    pass
+            if self.use_map_for_location:
+                # Get coordinates from state first
+                lat_str = str(self.activity_latitude).strip() if self.activity_latitude else ""
+                lng_str = str(self.activity_longitude).strip() if self.activity_longitude else ""
+                
+                # Debug logging
+                print(f"DEBUG create_activity - use_map_for_location: {self.use_map_for_location}")
+                print(f"DEBUG create_activity - activity_latitude: '{self.activity_latitude}' (type: {type(self.activity_latitude)})")
+                print(f"DEBUG create_activity - activity_longitude: '{self.activity_longitude}' (type: {type(self.activity_longitude)})")
+                print(f"DEBUG create_activity - lat_str: '{lat_str}', lng_str: '{lng_str}'")
+                
+                # If state values are empty, coordinates might not have been synced yet
+                # This is a fallback - in normal operation, state should have the values
+                if not lat_str or not lng_str:
+                    print(f"DEBUG: State values empty, coordinates may not have been synced")
+                
+                if lat_str and lng_str:
+                    try:
+                        # Validate that they are valid numbers and convert to float
+                        latitude = float(lat_str)
+                        longitude = float(lng_str)
+                        print(f"DEBUG: Saving coordinates from state - lat: {latitude}, lng: {longitude}")
+                    except ValueError:
+                        print(f"DEBUG: Invalid coordinates - lat: {lat_str}, lng: {lng_str}")
+                        latitude = None
+                        longitude = None
+                else:
+                    print(f"DEBUG: Coordinates empty or invalid - lat: '{lat_str}', lng: '{lng_str}'")
 
             new_activity = Activity(
                 id=self._next_id(),
