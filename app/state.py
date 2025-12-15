@@ -25,7 +25,7 @@ class State(rx.State):
     activity_date: str = ""
     activity_time: str = "10:00"
     activity_max_participants: str = ""
-    activty_admin: bool = False,
+    activty_admin: bool = False
 
     message: str = ""
     message_type: str = "info"
@@ -105,7 +105,6 @@ class State(rx.State):
                 max_participants=max_participants,
                 participants=[],
                 creator_id=self.current_user_id or 1,
-                "admin_signed_up": False,
             )
 
             acts.append(new_activity)

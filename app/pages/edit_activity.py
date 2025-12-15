@@ -1,21 +1,16 @@
 import reflex as rx
 from app.states.state import State
 from app.layout import layout
-from app.config import Config
-from reflex_google_auth import google_login, google_oauth_provider
-
-_config = Config()
-GOOGLE_CLIENT_ID = _config.GOOGLE_CLIENT_ID or ""
 
 
-def create_activity() -> rx.Component:
+def edit_activity() -> rx.Component:
     return layout(
         rx.cond(
             State.is_authenticated,
             rx.center(
                 rx.card(
                     rx.vstack(
-                        rx.heading("Create New Activity", size="6", margin_bottom="4"),
+                        rx.heading("Edit Activity", size="6", margin_bottom="4"),
                         rx.vstack(
                             rx.text(
                                 "Title", weight="bold", size="2", margin_bottom="1"
@@ -141,12 +136,29 @@ def create_activity() -> rx.Component:
                             spacing="4",
                             width="100%",
                         ),
-                        rx.button(
-                            "Create Activity",
-                            on_click=State.create_activity,
-                            size="3",
+                        rx.hstack(
+                            rx.link(
+                                rx.button(
+                                    "Cancel",
+                                    variant="outline",
+                                    size="3",
+                                    width="100%",
+                                ),
+                                href=rx.cond(
+                                    State.editing_activity_id,
+                                    f"/activity/{State.editing_activity_id}",
+                                    "/explore",
+                                ),
+                            ),
+                            rx.button(
+                                "Update Activity",
+                                on_click=State.update_activity,
+                                size="3",
+                                width="100%",
+                                color_scheme="teal",
+                            ),
+                            spacing="4",
                             width="100%",
-                            color_scheme="teal",
                             margin_top="6",
                         ),
                         spacing="4",
@@ -160,20 +172,14 @@ def create_activity() -> rx.Component:
                 padding_y="8",
                 width="100%",
             ),
-            # Login Prompt if not authenticated
+            # Redirect to home if not authenticated
             rx.center(
                 rx.vstack(
                     rx.heading("Please Login", size="6"),
-                    rx.text("You need to be logged in to create an activity."),
-                    rx.cond(
-                        GOOGLE_CLIENT_ID != "",
-                        google_oauth_provider(
-                            google_login(
-                                on_success=State.on_google_login_success,
-                            ),
-                            client_id=GOOGLE_CLIENT_ID,
-                        ),
-                        rx.text("Google OAuth not configured.", color="red"),
+                    rx.text("You need to be logged in to edit activities."),
+                    rx.link(
+                        rx.button("Back to Home"),
+                        href="/",
                     ),
                     spacing="4",
                     align="center",
@@ -182,5 +188,5 @@ def create_activity() -> rx.Component:
                 width="100%",
             ),
         ),
-        on_mount=State.clear_activity_form,
+        on_mount=State.load_activity_for_edit,
     )
