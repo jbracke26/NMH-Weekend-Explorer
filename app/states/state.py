@@ -288,8 +288,8 @@ class State(rx.State):
                 "location": a.location,
                 "distance": a.distance,
                 "time": a.time,
-                "latitude": a.latitude,
-                "longitude": a.longitude,
+                "latitude": a.latitude if a.latitude is not None else None,
+                "longitude": a.longitude if a.longitude is not None else None,
                 "max_participants": a.max_participants,
                 "participants": a.participants or [],
                 "participants_count": len(a.participants) if a.participants else 0,
@@ -298,8 +298,6 @@ class State(rx.State):
                 "chaperone_id": getattr(a, "chaperone_id", None),
                 "needs_chaperone": getattr(a, "needs_chaperone", False),
                 "chaperone_name": getattr(a, "chaperone_name", ""),
-                "latitude": getattr(a, "latitude", None),
-                "longitude": getattr(a, "longitude", None),
             }
             for a in acts
         ]
@@ -337,11 +335,12 @@ class State(rx.State):
                 else ""
             )
 
-            # parse coordinates if provided (only if map was used)
+            # Get coordinates - try state first, then fallback to JavaScript window object
+            # JavaScript stores coordinates in window._pendingActivityCoordinates before calling create_activity
             latitude = None
             longitude = None
             if self.use_map_for_location:
-                # Get coordinates from state first
+                # First, try to get from state (in case it was synced)
                 lat_str = str(self.activity_latitude).strip() if self.activity_latitude else ""
                 lng_str = str(self.activity_longitude).strip() if self.activity_longitude else ""
                 
@@ -351,23 +350,27 @@ class State(rx.State):
                 print(f"DEBUG create_activity - activity_longitude: '{self.activity_longitude}' (type: {type(self.activity_longitude)})")
                 print(f"DEBUG create_activity - lat_str: '{lat_str}', lng_str: '{lng_str}'")
                 
-                # If state values are empty, coordinates might not have been synced yet
-                # This is a fallback - in normal operation, state should have the values
-                if not lat_str or not lng_str:
-                    print(f"DEBUG: State values empty, coordinates may not have been synced")
-                
+                # Try to get from state first
                 if lat_str and lng_str:
                     try:
-                        # Validate that they are valid numbers and convert to float
                         latitude = float(lat_str)
                         longitude = float(lng_str)
-                        print(f"DEBUG: Saving coordinates from state - lat: {latitude}, lng: {longitude}")
+                        print(f"DEBUG: Using coordinates from state - lat: {latitude}, lng: {longitude}")
                     except ValueError:
-                        print(f"DEBUG: Invalid coordinates - lat: {lat_str}, lng: {lng_str}")
+                        print(f"DEBUG: Invalid coordinates in state - lat: {lat_str}, lng: {lng_str}")
                         latitude = None
                         longitude = None
-                else:
-                    print(f"DEBUG: Coordinates empty or invalid - lat: '{lat_str}', lng: '{lng_str}'")
+                
+                # If coordinates are not in state, try to get from JavaScript window object
+                # This is done via a script that reads window._pendingActivityCoordinates
+                # For now, we'll use rx.script to execute JavaScript and get the coordinates
+                # However, since we can't directly access window object from Python,
+                # we'll rely on the state values being set by the JavaScript interceptor
+                # If that fails, coordinates will be None
+                if not latitude or not longitude:
+                    print(f"DEBUG: Coordinates not in state")
+                    print(f"DEBUG: JavaScript should have set window._pendingActivityCoordinates")
+                    print(f"DEBUG: Note: If coordinates are None, the map may not have been used or coordinates were not set")
 
             new_activity = Activity(
                 id=self._next_id(),
@@ -387,9 +390,20 @@ class State(rx.State):
                 latitude=latitude,
                 longitude=longitude,
             )
+            
+            # Debug: Print activity data before saving
+            print(f"DEBUG: Creating activity with coordinates - lat: {latitude}, lng: {longitude}")
+            print(f"DEBUG: Activity object - latitude: {new_activity.latitude}, longitude: {new_activity.longitude}")
 
             acts.append(new_activity)
             save_activities(acts)
+            
+            # Debug: Verify saved data
+            saved_acts = load_activities()
+            saved_activity = next((a for a in saved_acts if a.id == new_activity.id), None)
+            if saved_activity:
+                print(f"DEBUG: Saved activity coordinates - lat: {saved_activity.latitude}, lng: {saved_activity.longitude}")
+            
             self.load_activities()
 
             self.activity_title = ""

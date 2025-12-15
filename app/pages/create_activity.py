@@ -220,6 +220,7 @@ def create_activity() -> rx.Component:
                                 }}
                             }};
                             
+                            // NEW APPROACH: Directly update Reflex state using a more reliable method
                             function updateLocationFromMap(lat, lng) {{
                                 console.log('updateLocationFromMap called with:', lat, lng);
                                 const latStr = lat.toString();
@@ -228,119 +229,109 @@ def create_activity() -> rx.Component:
                                 // Store coordinates in window object as backup
                                 window._tempLatitude = latStr;
                                 window._tempLongitude = lngStr;
+                                window._activityCoordinates = {{
+                                    latitude: parseFloat(latStr),
+                                    longitude: parseFloat(lngStr)
+                                }};
                                 
-                                // Try to update hidden inputs
+                                // Get hidden inputs
                                 const latInput = document.getElementById('activity_latitude_hidden');
                                 const lngInput = document.getElementById('activity_longitude_hidden');
                                 
-                                if (latInput && lngInput) {{
-                                    // Set value directly first
-                                    latInput.value = latStr;
-                                    lngInput.value = lngStr;
+                                if (!latInput || !lngInput) {{
+                                    console.error('Hidden inputs not found!');
+                                    return;
+                                }}
+                                
+                                // NEW APPROACH: Use React's synthetic event system if available
+                                // Otherwise, use native events with proper structure
+                                function updateInputValue(input, value) {{
+                                    // Method 1: Direct value assignment
+                                    input.value = value;
                                     
-                                    // Also set attribute for compatibility
-                                    latInput.setAttribute('value', latStr);
-                                    lngInput.setAttribute('value', lngStr);
+                                    // Method 2: Set attribute
+                                    input.setAttribute('value', value);
                                     
-                                    console.log('Setting hidden inputs:', latInput.value, lngInput.value);
-                                    
-                                    // Create React-compatible synthetic events
-                                    const createReactEvent = function(input, value, eventType) {{
-                                        // Create a native event first
-                                        const nativeEvent = document.createEvent('Event');
-                                        nativeEvent.initEvent(eventType, true, true);
-                                        
-                                        // Create a synthetic event object that React/Reflex expects
-                                        const syntheticEvent = {{
-                                            target: input,
-                                            currentTarget: input,
-                                            type: eventType,
-                                            bubbles: true,
-                                            cancelable: true,
-                                            defaultPrevented: false,
-                                            eventPhase: 2,
-                                            isTrusted: false,
-                                            nativeEvent: nativeEvent,
-                                            preventDefault: function() {{ nativeEvent.preventDefault(); }},
-                                            stopPropagation: function() {{ nativeEvent.stopPropagation(); }},
-                                            timeStamp: Date.now()
-                                        }};
-                                        
-                                        // Ensure the value is set on the target
+                                    // Method 3: Use Object.defineProperty
+                                    try {{
                                         Object.defineProperty(input, 'value', {{
                                             value: value,
                                             writable: true,
                                             configurable: true,
                                             enumerable: true
                                         }});
-                                        
-                                        return syntheticEvent;
-                                    }};
-                                    
-                                    // Try multiple event dispatch methods
-                                    try {{
-                                        // Method 1: Native events
-                                        const latChangeEvent = new Event('change', {{ bubbles: true, cancelable: true }});
-                                        const lngChangeEvent = new Event('change', {{ bubbles: true, cancelable: true }});
-                                        const latInputEvent = new Event('input', {{ bubbles: true, cancelable: true }});
-                                        const lngInputEvent = new Event('input', {{ bubbles: true, cancelable: true }});
-                                        
-                                        // Set value on target before dispatching
-                                        Object.defineProperty(latChangeEvent, 'target', {{ value: latInput, enumerable: true }});
-                                        Object.defineProperty(lngChangeEvent, 'target', {{ value: lngInput, enumerable: true }});
-                                        Object.defineProperty(latInputEvent, 'target', {{ value: latInput, enumerable: true }});
-                                        Object.defineProperty(lngInputEvent, 'target', {{ value: lngInput, enumerable: true }});
-                                        
-                                        // Dispatch events
-                                        latInput.dispatchEvent(latInputEvent);
-                                        latInput.dispatchEvent(latChangeEvent);
-                                        lngInput.dispatchEvent(lngInputEvent);
-                                        lngInput.dispatchEvent(lngChangeEvent);
-                                        
-                                        console.log('Native events dispatched');
                                     }} catch (e) {{
-                                        console.error('Error dispatching native events:', e);
+                                        // If defineProperty fails, just set value normally
+                                        input.value = value;
                                     }}
                                     
-                                    // Also try React's event system if available
-                                    if (window.React && window.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED) {{
+                                    // Method 4: Trigger React's onChange if available
+                                    if (input._valueTracker) {{
+                                        input._valueTracker.setValue('');
+                                        input._valueTracker.setValue(value);
+                                    }}
+                                    
+                                    // Method 5: Dispatch native events
+                                    const inputEvent = new Event('input', {{ bubbles: true, cancelable: true }});
+                                    const changeEvent = new Event('change', {{ bubbles: true, cancelable: true }});
+                                    
+                                    Object.defineProperty(inputEvent, 'target', {{ value: input, enumerable: true }});
+                                    Object.defineProperty(changeEvent, 'target', {{ value: input, enumerable: true }});
+                                    
+                                    input.dispatchEvent(inputEvent);
+                                    input.dispatchEvent(changeEvent);
+                                    
+                                    // Method 6: Try React's synthetic event system
+                                    if (window.React && window.ReactDOM) {{
                                         try {{
-                                            const ReactDOM = window.ReactDOM || (window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers);
-                                            if (ReactDOM) {{
-                                                const latSynthetic = createReactEvent(latInput, latStr, 'change');
-                                                const lngSynthetic = createReactEvent(lngInput, lngStr, 'change');
-                                                // React handles this internally, so we just dispatch native events
+                                            const nativeEvent = new Event('input', {{ bubbles: true }});
+                                            Object.defineProperty(nativeEvent, 'target', {{ value: input }});
+                                            const syntheticEvent = window.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentDispatcher?.current?.createSyntheticEvent?.(nativeEvent);
+                                            if (syntheticEvent) {{
+                                                input.dispatchEvent(syntheticEvent);
                                             }}
                                         }} catch (e) {{
-                                            console.log('React event system not available or error:', e);
+                                            // React synthetic events not available, use native events
                                         }}
                                     }}
-                                    
-                                    // Force a blur event to trigger state update
-                                    setTimeout(function() {{
-                                        latInput.focus();
-                                        latInput.blur();
-                                        lngInput.focus();
-                                        lngInput.blur();
-                                        
-                                        // Dispatch one more change event after blur
-                                        const finalChange = new Event('change', {{ bubbles: true, cancelable: true }});
-                                        latInput.dispatchEvent(finalChange);
-                                        lngInput.dispatchEvent(finalChange);
-                                        
-                                        console.log('Final events dispatched after blur');
-                                    }}, 50);
-                                    
-                                    console.log('Events dispatched, final values:', latInput.value, lngInput.value);
-                                    
-                                    // Additional verification after a short delay
-                                    setTimeout(function() {{
-                                        console.log('Verification - latInput.value:', latInput.value, 'lngInput.value:', lngInput.value);
-                                        console.log('Window temp values - lat:', window._tempLatitude, 'lng:', window._tempLongitude);
-                                    }}, 300);
-                                }} else {{
-                                    console.error('Hidden inputs not found! Storing in window object only.');
                                 }}
+                                
+                                // Update both inputs
+                                updateInputValue(latInput, latStr);
+                                updateInputValue(lngInput, lngStr);
+                                
+                                console.log('Coordinates updated - lat:', latInput.value, 'lng:', lngInput.value);
+                                
+                                // Force a state update by triggering multiple events
+                                setTimeout(function() {{
+                                    // Trigger blur events to ensure state is updated
+                                    latInput.focus();
+                                    setTimeout(function() {{
+                                        latInput.blur();
+                                        const blurEvent = new Event('blur', {{ bubbles: true, cancelable: true }});
+                                        Object.defineProperty(blurEvent, 'target', {{ value: latInput, enumerable: true }});
+                                        latInput.dispatchEvent(blurEvent);
+                                        
+                                        lngInput.focus();
+                                        setTimeout(function() {{
+                                            lngInput.blur();
+                                            const blurEvent2 = new Event('blur', {{ bubbles: true, cancelable: true }});
+                                            Object.defineProperty(blurEvent2, 'target', {{ value: lngInput, enumerable: true }});
+                                            lngInput.dispatchEvent(blurEvent2);
+                                            
+                                            // Final change event
+                                            const finalChange = new Event('change', {{ bubbles: true, cancelable: true }});
+                                            Object.defineProperty(finalChange, 'target', {{ value: latInput, enumerable: true }});
+                                            latInput.dispatchEvent(finalChange);
+                                            
+                                            const finalChange2 = new Event('change', {{ bubbles: true, cancelable: true }});
+                                            Object.defineProperty(finalChange2, 'target', {{ value: lngInput, enumerable: true }});
+                                            lngInput.dispatchEvent(finalChange2);
+                                            
+                                            console.log('Final coordinates after all events:', latInput.value, lngInput.value);
+                                        }}, 100);
+                                    }}, 100);
+                                }}, 100);
                             }}
                             
                             window.cleanupCreateActivityMap = function() {{
@@ -511,51 +502,55 @@ def create_activity() -> rx.Component:
                                 }}
                             }}, 150);
                             
-                            // Intercept create activity button click to ensure coordinates are synced
+                            // Simple interceptor: just sync coordinates to hidden inputs without preventing click
+                            // This avoids infinite loops by not re-triggering the button click
                             function setupCreateButtonInterceptor() {{
                                 const createButton = document.getElementById('create_activity_button');
                                 if (createButton) {{
                                     createButton.addEventListener('click', function(e) {{
-                                        console.log('Create Activity button clicked, checking coordinates...');
+                                        console.log('Create Activity button clicked - syncing coordinates');
                                         
-                                        // Get coordinates from hidden inputs or window object
+                                        // Get coordinates from multiple sources
                                         const latInput = document.getElementById('activity_latitude_hidden');
                                         const lngInput = document.getElementById('activity_longitude_hidden');
                                         
                                         let latStr = '';
                                         let lngStr = '';
                                         
+                                        // Try hidden inputs first
                                         if (latInput && lngInput) {{
                                             latStr = latInput.value || '';
                                             lngStr = lngInput.value || '';
                                         }}
                                         
-                                        // Fallback to window object if inputs are empty
+                                        // Fallback to window object
                                         if (!latStr || !lngStr) {{
                                             latStr = window._tempLatitude || '';
                                             lngStr = window._tempLongitude || '';
-                                            
-                                            // If we have coordinates from window, update the inputs
-                                            if (latStr && lngStr && latInput && lngInput) {{
-                                                latInput.value = latStr;
-                                                lngInput.value = lngStr;
-                                                
-                                                // Dispatch events to update Reflex state
-                                                const latEvent = new Event('change', {{ bubbles: true }});
-                                                const lngEvent = new Event('change', {{ bubbles: true }});
-                                                latInput.dispatchEvent(latEvent);
-                                                lngInput.dispatchEvent(lngEvent);
-                                                
-                                                console.log('Updated coordinates from window object:', latStr, lngStr);
-                                            }}
                                         }}
                                         
-                                        console.log('Final coordinates before submit:', latStr, lngStr);
+                                        console.log('Coordinates found:', latStr, lngStr);
                                         
-                                        // Small delay to ensure state is updated
-                                        setTimeout(function() {{
-                                            // The button click will proceed normally
-                                        }}, 100);
+                                        // If we have coordinates, sync them to hidden inputs
+                                        // Don't prevent click - just sync and let it proceed
+                                        if (latStr && lngStr && latInput && lngInput) {{
+                                            latInput.value = latStr;
+                                            lngInput.value = lngStr;
+                                            
+                                            // Dispatch change events to update Reflex state
+                                            const changeEvent = new Event('change', {{ bubbles: true, cancelable: true }});
+                                            Object.defineProperty(changeEvent, 'target', {{ value: latInput, enumerable: true }});
+                                            latInput.dispatchEvent(changeEvent);
+                                            
+                                            const changeEvent2 = new Event('change', {{ bubbles: true, cancelable: true }});
+                                            Object.defineProperty(changeEvent2, 'target', {{ value: lngInput, enumerable: true }});
+                                            lngInput.dispatchEvent(changeEvent2);
+                                            
+                                            console.log('Coordinates synced to hidden inputs:', latInput.value, lngInput.value);
+                                        }}
+                                        
+                                        // Allow click to proceed normally - no preventDefault, no re-triggering
+                                        console.log('Proceeding with button click');
                                     }}, true); // Use capture phase
                                 }} else {{
                                     // Retry if button not found yet
@@ -681,19 +676,46 @@ def create_activity() -> rx.Component:
                                     rx.cond(
                                         GOOGLE_MAPS_API_KEY != "",
                                         rx.fragment(
-                                            rx.input(
-                                                id="activity_latitude_hidden",
-                                                type="text",
-                                                value=State.activity_latitude,
-                                                on_change=State.set_activity_latitude,
-                                                display="none",
-                                            ),
-                                            rx.input(
-                                                id="activity_longitude_hidden",
-                                                type="text",
-                                                value=State.activity_longitude,
-                                                on_change=State.set_activity_longitude,
-                                                display="none",
+                                            rx.vstack(
+                                                rx.text(
+                                                    "Coordinates (set by clicking on map)",
+                                                    weight="bold",
+                                                    size="2",
+                                                    margin_bottom="1",
+                                                ),
+                                                rx.hstack(
+                                                    rx.vstack(
+                                                        rx.text("Latitude", size="1", color="var(--gray-10)"),
+                                                        rx.input(
+                                                            id="activity_latitude_hidden",
+                                                            type="text",
+                                                            value=State.activity_latitude,
+                                                            on_change=State.set_activity_latitude,
+                                                            placeholder="e.g., 42.5364",
+                                                            width="100%",
+                                                        ),
+                                                        width="100%",
+                                                        align_items="start",
+                                                    ),
+                                                    rx.vstack(
+                                                        rx.text("Longitude", size="1", color="var(--gray-10)"),
+                                                        rx.input(
+                                                            id="activity_longitude_hidden",
+                                                            type="text",
+                                                            value=State.activity_longitude,
+                                                            on_change=State.set_activity_longitude,
+                                                            placeholder="e.g., -72.5278",
+                                                            width="100%",
+                                                        ),
+                                                        width="100%",
+                                                        align_items="start",
+                                                    ),
+                                                    spacing="2",
+                                                    width="100%",
+                                                ),
+                                                width="100%",
+                                                align_items="start",
+                                                margin_bottom="2",
                                             ),
                                             rx.box(
                                                 id="create_activity_map",

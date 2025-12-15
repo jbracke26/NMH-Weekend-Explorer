@@ -427,6 +427,7 @@ def index():
                                         setTimeout(initializeHomeMap, 100);
                                     }}
                                     
+                                    // Watch for changes in activities
                                     setInterval(updateHomeActivitiesData, 5000);
                                 }})();
                                 """

@@ -462,7 +462,7 @@ def map_page():
                                         },
                                         transition="all 0.2s ease",
                                         width="calc(100%)",
-                                        margin="5px",
+                                        margin="5px",  
                                     ),
                                     href=f"/activity/{activity['id']}",
                                     text_decoration="none",
