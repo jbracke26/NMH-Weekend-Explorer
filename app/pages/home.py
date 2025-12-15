@@ -12,7 +12,7 @@ GOOGLE_MAPS_API_KEY = _config.GOOGLE_MAPS_API_KEY or ""
 
 def index():
     return layout(
-        rx.vstack(
+            rx.vstack(
             rx.box(
                 rx.heading("My Activities", size="5", margin_bottom="3"),
                 rx.cond(
@@ -60,7 +60,7 @@ def index():
                                             spacing="1",
                                         ),
                                         min_width="200px",
-                                        height="100px",
+                        height="100px",
                                         cursor="pointer",
                                         _hover={"box_shadow": "md"},
                                     ),
@@ -91,7 +91,7 @@ def index():
             ),
             rx.hstack(
                 rx.box(
-                    rx.cond(
+                rx.cond(
                         GOOGLE_MAPS_API_KEY != "",
                         rx.fragment(
                             rx.script(
@@ -157,11 +157,96 @@ def index():
                                             let geocodedCount = 0;
                                             
                                             activitiesData.forEach((activity, index) => {{
-                                                const location = activity.location || '';
-                                                if (!location) return;
+                                                // Priority: Use saved coordinates directly if available
+                                                // This avoids unnecessary geocoding API calls
+                                                // The location field is ignored when coordinates exist
+                                                let position;
+                                                if (activity.latitude && activity.longitude) {{
+                                                    const lat = parseFloat(activity.latitude);
+                                                    const lng = parseFloat(activity.longitude);
+                                                    if (!isNaN(lat) && !isNaN(lng)) {{
+                                                        position = {{ lat: lat, lng: lng }};
+                                                        // Create marker directly with saved coordinates
+                                                        const marker = new window.google.maps.Marker({{
+                                                            position: position,
+                                                            map: window.homeMap,
+                                                            title: activity.title,
+                                                            icon: {{
+                                                                url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                                                                scaledSize: new window.google.maps.Size(32, 32)
+                                                            }}
+                                                        }});
+                                                        
+                                                        const infoWindow = new window.google.maps.InfoWindow({{
+                                                            content: `
+                                                                <div style="padding: 8px; min-width: 200px;">
+                                                                    <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold;">${{activity.title}}</h3>
+                                                                    <p style="margin: 4px 0; color: #666; font-size: 12px;"><strong>Category:</strong> ${{activity.category || 'Other'}}</p>
+                                                                    <p style="margin: 4px 0; color: #666; font-size: 12px;"><strong>Location:</strong> ${{activity.location || 'N/A'}}</p>
+                                                                    <p style="margin: 4px 0; color: #666; font-size: 12px;"><strong>Time:</strong> ${{activity.time || 'N/A'}}</p>
+                                                                    <a href="/activity/${{activity.id}}" style="display: inline-block; margin-top: 8px; padding: 6px 12px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">View Details</a>
+                                                                </div>
+                                                            `
+                                                        }});
+                                                        
+                                                        marker.infoWindow = infoWindow;
+                                                        marker.marker = marker;
+                                                        
+                                                        marker.addListener('click', () => {{
+                                                            window.homeInfoWindows.forEach(iw => iw.close());
+                                                            infoWindow.open(window.homeMap, marker);
+                                                            window.homeMap.openInfoWindow = infoWindow;
+                                                            window.homeMap.openMarker = marker;
+                                                        }});
+                                                        
+                                                        window.homeMarkers.push(marker);
+                                                        window.homeInfoWindows.push(infoWindow);
+                                                        
+                                                        geocodedCount++;
+                                                        if (geocodedCount === activitiesData.length) {{
+                                                            if (window.homeMarkers.length > 0) {{
+                                                                const hasOpenInfoWindow = window.homeMap.openInfoWindow && 
+                                                                    window.homeMap.openInfoWindow.getMap() !== null;
+                                                                
+                                                                if (!hasOpenInfoWindow && !window.homeMapInitialized) {{
+                                                                    const bounds = new window.google.maps.LatLngBounds();
+                                                                    window.homeMarkers.forEach(m => bounds.extend(m.getPosition()));
+                                                                    if (window.homeMarkers.length === 1) {{
+                                                                        window.homeMap.setCenter(window.homeMarkers[0].getPosition());
+                                                                        window.homeMap.setZoom(15);
+                                                                    }} else {{
+                                                                        window.homeMap.fitBounds(bounds);
+                                                                    }}
+                                                                    window.homeMapInitialized = true;
+                                                                }}
+                                                                
+                                                                // If there was an open infoWindow before reload, try to reopen it
+                                                                if (wasOpen && openMarker) {{
+                                                                    const openLat = openMarker.getPosition().lat();
+                                                                    const openLng = openMarker.getPosition().lng();
+                                                                    const matchingMarker = window.homeMarkers.find(m => {{
+                                                                        const pos = m.getPosition();
+                                                                        return Math.abs(pos.lat() - openLat) < 0.0001 && 
+                                                                               Math.abs(pos.lng() - openLng) < 0.0001;
+                                                                    }});
+                                                                    if (matchingMarker && matchingMarker.infoWindow) {{
+                                                                        setTimeout(() => {{
+                                                                            matchingMarker.infoWindow.open(window.homeMap, matchingMarker);
+                                                                            window.homeMap.openInfoWindow = matchingMarker.infoWindow;
+                                                                            window.homeMap.openMarker = matchingMarker;
+                                                                        }}, 200);
+                                                                    }}
+                                                                }}
+                                                            }}
+                                                        }}
+                                                        return;
+                                                    }}
+                                                }}
                                                 
+                                                // Fallback: Only use geocoding if no saved coordinates exist
+                                                // If coordinates exist, we skip this entire block (early return above)
+                                                const location = activity.location || '';
                                                 geocoder.geocode({{ address: location + ', Northfield, MA' }}, (results, status) => {{
-                                                    let position;
                                                     if (status === 'OK' && results[0]) {{
                                                         position = results[0].geometry.location;
                                                     }} else {{
@@ -206,10 +291,12 @@ def index():
                                                     geocodedCount++;
                                                     if (geocodedCount === activitiesData.length) {{
                                                         if (window.homeMarkers.length > 0) {{
-                                                            if (isFirstLoad) {{
+                                                            const hasOpenInfoWindow = window.homeMap.openInfoWindow && 
+                                                                window.homeMap.openInfoWindow.getMap() !== null;
+                                                            
+                                                            if (!hasOpenInfoWindow && !window.homeMapInitialized) {{
                                                                 const bounds = new window.google.maps.LatLngBounds();
                                                                 window.homeMarkers.forEach(m => bounds.extend(m.getPosition()));
-                                                                
                                                                 if (window.homeMarkers.length === 1) {{
                                                                     window.homeMap.setCenter(window.homeMarkers[0].getPosition());
                                                                     window.homeMap.setZoom(15);
@@ -219,11 +306,15 @@ def index():
                                                                 window.homeMapInitialized = true;
                                                             }}
                                                             
+                                                            // If there was an open infoWindow before reload, try to reopen it
                                                             if (wasOpen && openMarker) {{
-                                                                const matchingMarker = window.homeMarkers.find(m => 
-                                                                    m.getPosition().lat() === openMarker.getPosition().lat() &&
-                                                                    m.getPosition().lng() === openMarker.getPosition().lng()
-                                                                );
+                                                                const openLat = openMarker.getPosition().lat();
+                                                                const openLng = openMarker.getPosition().lng();
+                                                                const matchingMarker = window.homeMarkers.find(m => {{
+                                                                    const pos = m.getPosition();
+                                                                    return Math.abs(pos.lat() - openLat) < 0.0001 && 
+                                                                           Math.abs(pos.lng() - openLng) < 0.0001;
+                                                                }});
                                                                 if (matchingMarker && matchingMarker.infoWindow) {{
                                                                     setTimeout(() => {{
                                                                         matchingMarker.infoWindow.open(window.homeMap, matchingMarker);
@@ -250,13 +341,19 @@ def index():
                                                 
                                                 const dataChanged = JSON.stringify(newData) !== JSON.stringify(currentData);
                                                 
+                                                // Check if InfoWindow is open - if so, skip update completely
                                                 const hasOpenInfoWindow = window.homeMap && window.homeMap.openInfoWindow && 
                                                     window.homeMap.openInfoWindow.getMap() !== null;
                                                 
-                                                if (dataChanged && !hasOpenInfoWindow && window.google && window.loadHomeMapActivities) {{
+                                                if (hasOpenInfoWindow) {{
+                                                    // InfoWindow is open, don't update to prevent instability
+                                                    return;
+                                                }}
+                                                
+                                                if (dataChanged && window.google && window.loadHomeMapActivities) {{
                                                     window.homeActivitiesData = newData;
                                                     window.loadHomeMapActivities();
-                                                }} else if (dataChanged && !hasOpenInfoWindow) {{
+                                                }} else if (dataChanged) {{
                                                     window.homeActivitiesData = newData;
                                                 }}
                                             }} catch (e) {{
@@ -269,39 +366,61 @@ def index():
                                     function initializeHomeMap() {{
                                         const mapContainer = document.getElementById('home_map');
                                         if (!mapContainer) {{
-                                            setTimeout(initializeHomeMap, 100);
+                                            console.log('home_map container not found, retrying...');
+                                            setTimeout(initializeHomeMap, 200);
                                             return;
                                         }}
                                         
-                                        if (!window.google || !window.google.maps) {{
+                                        // Check if map is already initialized
+                                        if (window.homeMap) {{
+                                            console.log('Home map already initialized');
+                                            return;
+                                        }}
+                                        
+                                        if (!window.google || !window.google.maps || !window.google.maps.Map) {{
                                             console.log('Loading Google Maps API...');
+                                            
+                                            // Check if script is already being loaded
+                                            if (document.querySelector('script[src*="maps.googleapis.com"]')) {{
+                                                console.log('Google Maps API script already exists, waiting...');
+                                                setTimeout(initializeHomeMap, 500);
+                                                return;
+                                            }}
+                                            
                                             const script = document.createElement('script');
-                                            script.src = 'https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}&loading=async';
+                                            script.src = 'https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}&loading=async&callback=initGoogleMapsCallback';
                                             script.async = true;
                                             script.defer = true;
-                                            script.onload = function() {{
-                                                console.log('Google Maps API script loaded, waiting for maps object...');
-                                                function waitForMaps() {{
+                                            
+                                            // Set up global callback
+                                            window.initGoogleMapsCallback = function() {{
+                                                console.log('Google Maps API callback fired');
+                                                setTimeout(function() {{
                                                     if (window.google && window.google.maps && window.google.maps.Map) {{
-                                                        console.log('Google Maps API fully loaded');
-                                                        setTimeout(function() {{
-                                                            if (window.initHomeMap) {{
-                                                                window.initHomeMap();
-                                                            }}
-                                                        }}, 100);
+                                                        console.log('Google Maps API fully loaded via callback');
+                                                        if (window.initHomeMap) {{
+                                                            window.initHomeMap();
+                                                        }}
                                                     }} else {{
-                                                        console.log('Waiting for google.maps...');
-                                                        setTimeout(waitForMaps, 100);
+                                                        console.log('Maps object still not available, retrying...');
+                                                        setTimeout(initializeHomeMap, 200);
                                                     }}
-                                                }}
-                                                waitForMaps();
+                                                }}, 100);
                                             }};
+                                            
+                                            script.onload = function() {{
+                                                console.log('Google Maps API script loaded');
+                                                // Callback should handle initialization
+                                            }};
+                                            
                                             script.onerror = function() {{
                                                 console.error('Failed to load Google Maps API. Check your API key in .env file.');
+                                                delete window.initGoogleMapsCallback;
                                             }};
+                                            
                                             document.head.appendChild(script);
                                         }} else {{
-                                            console.log('Google Maps API already loaded');
+                                            console.log('Google Maps API already available');
                                             if (window.initHomeMap) {{
                                                 setTimeout(function() {{
                                                     window.initHomeMap();
@@ -310,17 +429,28 @@ def index():
                                         }}
                                     }}
                                     
-                                    if (document.readyState === 'complete') {{
-                                        setTimeout(initializeHomeMap, 200);
-                                    }} else if (document.readyState === 'interactive') {{
-                                        setTimeout(initializeHomeMap, 300);
-                                    }} else {{
-                                        document.addEventListener('DOMContentLoaded', function() {{
-                                            setTimeout(initializeHomeMap, 200);
-                                        }});
+                                    // Initialize when DOM is ready
+                                    function startMapInitialization() {{
+                                        if (document.readyState === 'loading') {{
+                                            document.addEventListener('DOMContentLoaded', function() {{
+                                                setTimeout(initializeHomeMap, 300);
+                                            }});
+                                        }} else {{
+                                            setTimeout(initializeHomeMap, 300);
+                                        }}
                                     }}
                                     
-                                    setInterval(updateHomeActivitiesData, 2000);
+                                    startMapInitialization();
+                                    
+                                    // Also try after a delay to catch late renders
+                                    setTimeout(function() {{
+                                        if (!window.homeMap) {{
+                                            console.log('Retrying map initialization after delay...');
+                                            initializeHomeMap();
+                                        }}
+                                    }}, 1000);
+                                    
+                                    setInterval(updateHomeActivitiesData, 5000);
                                 }})();
                                 """
                             ),
@@ -337,6 +467,7 @@ def index():
                                 border_radius="12px",
                                 border="1px solid var(--gray-6)",
                                 background="var(--gray-2)",
+                                display="block",
                             ),
                         ),
                         rx.center(
@@ -366,7 +497,7 @@ def index():
                                         rx.text(
                                             activity["title"],
                                             weight="bold",
-                                            size="3",
+                    size="3",
                                         ),
                                         rx.hstack(
                                             rx.badge(
@@ -394,8 +525,8 @@ def index():
                                                 None,
                                             ),
                                             spacing="2",
-                                        ),
-                                        rx.cond(
+                ),
+                rx.cond(
                                             activity["admin_signed_up"],
                                             rx.text(
                                                 "Chaperone assigned",
@@ -439,10 +570,10 @@ def index():
                         spacing="2",
                         width="100%",
                     ),
-                    rx.link(
-                        rx.button(
+                rx.link(
+                    rx.button(
                             "Create Activity",
-                            size="3",
+                        size="3",
                             width="100%",
                             margin_top="4",
                         ),

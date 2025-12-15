@@ -86,6 +86,53 @@ class State(rx.State):
             return []
         return [self.get_user_name(p) for p in participants]
 
+    def set_activity_log_location(self, value: bool):
+        self.activity_log_location = value
+
+    def set_activity_latitude(self, value: str):
+        self.activity_latitude = value
+
+    def set_activity_longitude(self, value: str):
+        self.activity_longitude = value
+
+    def set_use_map_for_location(self, value: bool):
+        self.use_map_for_location = value
+        # Reset map coordinates when turning off map
+        if not value:
+            self.activity_latitude = ""
+            self.activity_longitude = ""
+            self.activity_log_location = False
+    
+    def toggle_use_map_for_location(self):
+        """Toggle the use_map_for_location state."""
+        self.use_map_for_location = not self.use_map_for_location
+        # Reset map coordinates when turning off map
+        if not self.use_map_for_location:
+            self.activity_latitude = ""
+            self.activity_longitude = ""
+            self.activity_log_location = False
+
+    def reset_create_activity_form(self):
+        """Reset all create activity form fields to default values."""
+        self.use_map_for_location = False
+        self.activity_log_location = False
+        self.activity_latitude = ""
+        self.activity_longitude = ""
+
+    def on_create_activity_page_load(self):
+        """Called when create activity page loads - reset form fields."""
+        self.hide_header_login = True
+        self.use_map_for_location = False
+        self.activity_log_location = False
+        self.activity_latitude = ""
+        self.activity_longitude = ""
+
+    def set_location_from_map(self, lat: str, lng: str):
+        """Set location coordinates from map click."""
+        self.activity_latitude = lat
+        self.activity_longitude = lng
+        self.activity_log_location = True
+
     def load_activity_details(self):
         activity_id = self.router.page.params.get("activity_id")
         if activity_id:
@@ -240,6 +287,8 @@ class State(rx.State):
                 "location": a.location,
                 "distance": a.distance,
                 "time": a.time,
+                "latitude": a.latitude,
+                "longitude": a.longitude,
                 "max_participants": a.max_participants,
                 "participants": a.participants or [],
                 "participants_count": len(a.participants) if a.participants else 0,
@@ -335,6 +384,10 @@ class State(rx.State):
             self.activity_date = ""
             self.activity_time = "10:00"
             self.activity_max_participants = ""
+            self.activity_log_location = False
+            self.activity_latitude = ""
+            self.activity_longitude = ""
+            self.use_map_for_location = False
 
             self.message = "Activity created successfully!"
             self.message_type = "success"
