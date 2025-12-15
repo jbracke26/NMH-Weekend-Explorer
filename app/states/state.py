@@ -31,11 +31,62 @@ class State(rx.State):
     activity_date: str = ""
     activity_time: str = "10:00"
     activity_max_participants: str = ""
+    activity_log_location: bool = False
+    activity_latitude: str = ""
+    activity_longitude: str = ""
+    use_map_for_location: bool = False
 
     message: str = ""
     message_type: str = "info"
 
     current_activity: dict = {}
+
+    def set_activity_log_location(self, value: bool):
+        self.activity_log_location = value
+
+    def set_activity_latitude(self, value: str):
+        self.activity_latitude = value
+
+    def set_activity_longitude(self, value: str):
+        self.activity_longitude = value
+
+    def set_use_map_for_location(self, value: bool):
+        self.use_map_for_location = value
+        # Reset map coordinates when turning off map
+        if not value:
+            self.activity_latitude = ""
+            self.activity_longitude = ""
+            self.activity_log_location = False
+    
+    def toggle_use_map_for_location(self):
+        """Toggle the use_map_for_location state."""
+        self.use_map_for_location = not self.use_map_for_location
+        # Reset map coordinates when turning off map
+        if not self.use_map_for_location:
+            self.activity_latitude = ""
+            self.activity_longitude = ""
+            self.activity_log_location = False
+
+    def reset_create_activity_form(self):
+        """Reset all create activity form fields to default values."""
+        self.use_map_for_location = False
+        self.activity_log_location = False
+        self.activity_latitude = ""
+        self.activity_longitude = ""
+
+    def on_create_activity_page_load(self):
+        """Called when create activity page loads - reset form fields."""
+        self.hide_header_login = True
+        self.use_map_for_location = False
+        self.activity_log_location = False
+        self.activity_latitude = ""
+        self.activity_longitude = ""
+
+    def set_location_from_map(self, lat: str, lng: str):
+        """Set location coordinates from map click."""
+        self.activity_latitude = lat
+        self.activity_longitude = lng
+        self.activity_log_location = True
 
     def load_activity_details(self):
         activity_id = self.router.page.params.get("activity_id")
@@ -187,6 +238,8 @@ class State(rx.State):
                 "location": a.location,
                 "distance": a.distance,
                 "time": a.time,
+                "latitude": a.latitude,
+                "longitude": a.longitude,
                 "max_participants": a.max_participants,
                 "participants": a.participants or [],
                 "creator_id": a.creator_id,
@@ -226,6 +279,35 @@ class State(rx.State):
                 else ""
             )
 
+            # Determine coordinates - only save if map was used and coordinates are present
+            lat_value = None
+            lng_value = None
+            if self.use_map_for_location:
+                # Get coordinates from state
+                lat_str = str(self.activity_latitude).strip() if self.activity_latitude else ""
+                lng_str = str(self.activity_longitude).strip() if self.activity_longitude else ""
+                
+                # Debug logging
+                print(f"DEBUG create_activity - use_map_for_location: {self.use_map_for_location}")
+                print(f"DEBUG create_activity - activity_latitude: '{self.activity_latitude}' (type: {type(self.activity_latitude)})")
+                print(f"DEBUG create_activity - activity_longitude: '{self.activity_longitude}' (type: {type(self.activity_longitude)})")
+                print(f"DEBUG create_activity - lat_str: '{lat_str}', lng_str: '{lng_str}'")
+                
+                if lat_str and lng_str:
+                    try:
+                        # Validate that they are valid numbers
+                        float(lat_str)
+                        float(lng_str)
+                        lat_value = lat_str
+                        lng_value = lng_str
+                        print(f"DEBUG: Saving coordinates - lat: {lat_value}, lng: {lng_value}")
+                    except ValueError:
+                        print(f"DEBUG: Invalid coordinates - lat: {lat_str}, lng: {lng_str}")
+                        lat_value = None
+                        lng_value = None
+                else:
+                    print(f"DEBUG: Coordinates empty or invalid - lat: '{lat_str}', lng: '{lng_str}'")
+            
             new_activity = Activity(
                 id=self._next_id(),
                 title=self.activity_title,
@@ -239,6 +321,8 @@ class State(rx.State):
                 creator_id=self.current_user_id,
                 admin_signed_up=False,
                 chaperone_id=None,
+                latitude=lat_value,
+                longitude=lng_value,
             )
 
             acts.append(new_activity)
@@ -252,6 +336,10 @@ class State(rx.State):
             self.activity_date = ""
             self.activity_time = "10:00"
             self.activity_max_participants = ""
+            self.activity_log_location = False
+            self.activity_latitude = ""
+            self.activity_longitude = ""
+            self.use_map_for_location = False
 
             self.message = "Activity created successfully!"
             self.message_type = "success"

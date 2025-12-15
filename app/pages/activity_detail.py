@@ -110,10 +110,10 @@ def activity_detail() -> rx.Component:
                                                     ]
                                                 ),
                                                 rx.text("Unlimited"),
-                                                rx.cond(
-                                                        State.is_admin & State.current_activity["participants"].to(list).contains(State.current_user_id),
-                                                        rx.text("Admin has joined", color="teal", font_weight="medium", margin_left="8px"),
-                                                    ),
+                                            ),
+                                            rx.cond(
+                                                State.is_admin & State.current_activity["participants"].to(list).contains(State.current_user_id),
+                                                rx.text("Admin has joined", color="teal", font_weight="medium", margin_left="8px"),
                                             ),
                                             font_weight="bold",
                                         ),

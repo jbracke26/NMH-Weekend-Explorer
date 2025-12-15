@@ -7,41 +7,6 @@
     "is_admin": true
   },
   {
-    "activity_id": 18,
-    "user_id": 37414294,
-    "title": "test",
-    "date": "test",
-    "time": "10:00"
-  },
-  {
-    "activity_id": 18,
-    "user_id": 1,
-    "title": "test",
-    "date": "",
-    "time": "10:00"
-  },
-  {
-    "activity_id": 18,
-    "user_id": 37414294,
-    "title": "test",
-    "date": "tests",
-    "time": "10:00"
-  },
-  {
-    "activity_id": 18,
-    "user_id": 37414294,
-    "title": "fgfg",
-    "date": "",
-    "time": "10:00"
-  },
-  {
-    "activity_id": 18,
-    "user_id": 37414294,
-    "title": "test",
-    "date": "test",
-    "time": "10:00"
-  },
-  {
     "user_id": 32375958,
     "email": "shunsuke20070602honjo@gmail.com",
     "name": "Shunsuke Honjo",

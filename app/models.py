@@ -35,6 +35,8 @@ class Activity:
     creator_id: Optional[int] = None
     admin_signed_up: bool = False
     chaperone_id: Optional[int] = None
+    latitude: Optional[str] = None
+    longitude: Optional[str] = None
 
 
     @staticmethod
@@ -56,6 +58,8 @@ class Activity:
                     creator_id=raw.get("creator_id"),
                     admin_signed_up=bool(raw.get("admin_signed_up", False)),
                     chaperone_id=raw.get("chaperone_id"),
+                    latitude=raw.get("latitude"),
+                    longitude=raw.get("longitude"),
                 )
             )
         return activities
