@@ -353,7 +353,7 @@ def map_page():
                                 value=State.filtered_activities_json,
                                 style={"display": "none"},
                             ),
-                rx.box(
+                            rx.box(
                                 id="map",
                                 width="100%",
                                 height="500px",
@@ -362,10 +362,10 @@ def map_page():
                                 background="var(--gray-2)",
                             ),
                         ),
-                    rx.center(
-                        rx.vstack(
-                            rx.icon("map-pin", size=48, color="var(--gray-9)"),
-                            rx.text(
+                        rx.center(
+                            rx.vstack(
+                                rx.icon("map-pin", size=48, color="var(--gray-9)"),
+                                rx.text(
                                     "Google Maps API Key not configured",
                                     size="4",
                                     color="var(--gray-11)",
@@ -375,10 +375,10 @@ def map_page():
                                     size="2",
                                     color="var(--gray-10)",
                                 ),
-                            spacing="3",
+                                spacing="3",
+                            ),
+                            height="500px",
                         ),
-                        height="500px",
-                    ),
                     ),
                     flex="2",
                 ),
@@ -462,7 +462,7 @@ def map_page():
                                         },
                                         transition="all 0.2s ease",
                                         width="calc(100%)",
-                                        margin="5px",  
+                                        margin="5px",
                                     ),
                                     href=f"/activity/{activity['id']}",
                                     text_decoration="none",
@@ -485,5 +485,5 @@ def map_page():
             width="100%",
             spacing="5",
         ),
-        on_mount=State.load_activities,
+        on_mount=State.on_page_load,
     )

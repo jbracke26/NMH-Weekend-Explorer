@@ -36,6 +36,7 @@ def header() -> rx.Component:
                     size="3",
                     color=COLORS["primary"],
                     _hover={"opacity": "0.7"},
+                    _visited={"color": COLORS["primary"]},
                 ),
                 rx.fragment(),
             ),
@@ -114,11 +115,7 @@ def layout(content: rx.Component, **kwargs) -> rx.Component:
                         color=rx.cond(
                             State.message_type == "error",
                             "red",
-                            rx.cond(
-                                State.message_type == "success",
-                                "green",
-                                "blue"
-                            )
+                            rx.cond(State.message_type == "success", "green", "blue"),
                         ),
                         weight="medium",
                     ),
@@ -143,8 +140,8 @@ def layout(content: rx.Component, **kwargs) -> rx.Component:
                     rx.cond(
                         State.message_type == "success",
                         "var(--green-3)",
-                        "var(--blue-3)"
-                    )
+                        "var(--blue-3)",
+                    ),
                 ),
                 border_radius="6px",
                 margin_top="2",

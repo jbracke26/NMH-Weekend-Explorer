@@ -677,6 +677,23 @@ def edit_activity() -> rx.Component:
                     width="100%",
                 ),
             ),
-            on_mount=State.load_activity_for_edit,
-        )
+
+            # Redirect to home if not authenticated
+            rx.center(
+                rx.vstack(
+                    rx.heading("Please Login", size="6"),
+                    rx.text("You need to be logged in to edit activities."),
+                    rx.link(
+                        rx.button("Back to Home"),
+                        href="/",
+                    ),
+                    spacing="4",
+                    align="center",
+                ),
+                padding="10",
+                width="100%",
+            ),
+        ),
+        on_mount=[State.clear_message, State.load_activity_for_edit],
+
     )

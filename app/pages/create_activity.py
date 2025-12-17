@@ -400,285 +400,331 @@ def create_activity() -> rx.Component:
                     rx.center(
                         rx.card(
                             rx.vstack(
-                                rx.heading("Create New Activity", size="6", margin_bottom="4"),
+                                rx.heading(
+                                    "Create New Activity", size="6", margin_bottom="4"
+                                ),
                                 rx.vstack(
-                                rx.text(
-                                    "Title", weight="bold", size="2", margin_bottom="1"
-                                ),
-                                rx.input(
-                                    placeholder="e.g., Northampton Dinner Trip",
-                                    value=State.activity_title,
-                                    on_change=State.set_activity_title,
+                                    rx.text(
+                                        "Title",
+                                        weight="bold",
+                                        size="2",
+                                        margin_bottom="1",
+                                    ),
+                                    rx.input(
+                                        placeholder="e.g., Northampton Dinner Trip",
+                                        value=State.activity_title,
+                                        on_change=State.set_activity_title,
+                                        width="100%",
+                                    ),
                                     width="100%",
+                                    align_items="start",
                                 ),
-                                width="100%",
-                                align_items="start",
-                            ),
-                        rx.vstack(
-                            rx.text(
-                                "Description",
-                                weight="bold",
-                                size="2",
-                                margin_bottom="1",
-                            ),
-                            rx.text_area(
-                                placeholder="Describe what you'll be doing...",
-                                value=State.activity_description,
-                                on_change=State.set_activity_description,
-                                min_height="120px",
-                                width="100%",
-                            ),
-                            width="100%",
-                            align_items="start",
-                        ),
-                        rx.hstack(
-                            rx.vstack(
-                                rx.text(
-                                    "Category",
-                                    weight="bold",
-                                    size="2",
-                                    margin_bottom="1",
-                                ),
-                                rx.select(
-                                    ["Outdoor", "Food", "Shopping", "Sports", "Other"],
-                                    placeholder="Select Category",
-                                    value=State.activity_category,
-                                    on_change=State.set_activity_category,
+                                rx.vstack(
+                                    rx.text(
+                                        "Description",
+                                        weight="bold",
+                                        size="2",
+                                        margin_bottom="1",
+                                    ),
+                                    rx.text_area(
+                                        placeholder="Describe what you'll be doing...",
+                                        value=State.activity_description,
+                                        on_change=State.set_activity_description,
+                                        min_height="120px",
+                                        width="100%",
+                                    ),
                                     width="100%",
+                                    align_items="start",
                                 ),
-                                width="100%",
-                                align_items="start",
-                            ),
-                            rx.vstack(
-                                rx.text(
-                                    "Max Participants",
-                                    weight="bold",
-                                    size="2",
-                                    margin_bottom="1",
-                                ),
-                                rx.input(
-                                    placeholder="Optional",
-                                    value=State.activity_max_participants,
-                                    on_change=State.set_activity_max_participants,
+                                rx.hstack(
+                                    rx.vstack(
+                                        rx.text(
+                                            "Category",
+                                            weight="bold",
+                                            size="2",
+                                            margin_bottom="1",
+                                        ),
+                                        rx.select(
+                                            [
+                                                "Outdoor",
+                                                "Food",
+                                                "Shopping",
+                                                "Sports",
+                                                "Other",
+                                            ],
+                                            placeholder="Select Category",
+                                            value=State.activity_category,
+                                            on_change=State.set_activity_category,
+                                            width="100%",
+                                        ),
+                                        width="100%",
+                                        align_items="start",
+                                    ),
+                                    rx.vstack(
+                                        rx.text(
+                                            "Max Participants",
+                                            weight="bold",
+                                            size="2",
+                                            margin_bottom="1",
+                                        ),
+                                        rx.input(
+                                            placeholder="Optional",
+                                            value=State.activity_max_participants,
+                                            on_change=State.set_activity_max_participants,
+                                            width="100%",
+                                        ),
+                                        width="100%",
+                                        align_items="start",
+                                    ),
                                     width="100%",
+                                    spacing="4",
                                 ),
-                                width="100%",
-                                align_items="start",
-                            ),
-                            width="100%",
-                            spacing="4",
-                        ),
-                        rx.vstack(
-                            rx.text(
-                                "Location", weight="bold", size="2", margin_bottom="1"
-                            ),
-                            rx.input(
-                                placeholder="e.g., Alumni Hall",
-                                value=State.activity_location,
-                                on_change=State.set_activity_location,
-                                width="100%",
-                            ),
-                            width="100%",
-                            align_items="start",
-                        ),
-                            rx.vstack(
-                            rx.text("Set Location on Map", weight="bold", size="2", margin_bottom="1"),
-                            rx.hstack(
-                                rx.text("Use interactive map?", weight="bold", size="2"),
-                                rx.switch(
-                                    is_checked=State.use_map_for_location,
-                                    on_change=State.set_use_map_for_location,
-                                    id="use_map_switch",
+                                rx.vstack(
+                                    rx.text(
+                                        "Location",
+                                        weight="bold",
+                                        size="2",
+                                        margin_bottom="1",
+                                    ),
+                                    rx.input(
+                                        placeholder="e.g., Alumni Hall",
+                                        value=State.activity_location,
+                                        on_change=State.set_activity_location,
+                                        width="100%",
+                                    ),
+                                    width="100%",
+                                    align_items="start",
                                 ),
-                                rx.text("Needs chaperone?", weight="bold", size="2"),
-                                rx.switch(
-                                    is_checked=State.activity_needs_chaperone,
-                                    on_change=State.set_activity_needs_chaperone,
-                                ),
-                                spacing="4",
-                                align_items="center",
-                            ),
-                            rx.cond(
-                                State.use_map_for_location,
-                                rx.fragment(
+                                rx.vstack(
+                                    rx.text(
+                                        "Set Location on Map",
+                                        weight="bold",
+                                        size="2",
+                                        margin_bottom="1",
+                                    ),
+                                    rx.hstack(
+                                        rx.text(
+                                            "Use interactive map?",
+                                            weight="bold",
+                                            size="2",
+                                        ),
+                                        rx.switch(
+                                            is_checked=State.use_map_for_location,
+                                            on_change=State.set_use_map_for_location,
+                                            id="use_map_switch",
+                                        ),
+                                        rx.text(
+                                            "Needs chaperone?", weight="bold", size="2"
+                                        ),
+                                        rx.switch(
+                                            is_checked=State.activity_needs_chaperone,
+                                            on_change=State.set_activity_needs_chaperone,
+                                        ),
+                                        spacing="4",
+                                        align_items="center",
+                                    ),
                                     rx.cond(
-                                        GOOGLE_MAPS_API_KEY != "",
+                                        State.use_map_for_location,
                                         rx.fragment(
-                                            rx.vstack(
-                                                rx.text(
-                                                    "Coordinates (set by clicking on map)",
-                                                    weight="bold",
-                                                    size="2",
-                                                    margin_bottom="1",
-                                                ),
-                                                rx.hstack(
+                                            rx.cond(
+                                                GOOGLE_MAPS_API_KEY != "",
+                                                rx.fragment(
                                                     rx.vstack(
-                                                        rx.text("Latitude", size="1", color="var(--gray-10)"),
-                                                        rx.input(
-                                                            id="activity_latitude_hidden",
-                                                            type="text",
-                                                            value=State.activity_latitude,
-                                                            on_change=State.set_activity_latitude,
-                                                            placeholder="e.g., 42.5364",
+                                                        rx.text(
+                                                            "Coordinates (set by clicking on map)",
+                                                            weight="bold",
+                                                            size="2",
+                                                            margin_bottom="1",
+                                                        ),
+                                                        rx.hstack(
+                                                            rx.vstack(
+                                                                rx.text(
+                                                                    "Latitude",
+                                                                    size="1",
+                                                                    color="var(--gray-10)",
+                                                                ),
+                                                                rx.input(
+                                                                    id="activity_latitude_hidden",
+                                                                    type="text",
+                                                                    value=State.activity_latitude,
+                                                                    on_change=State.set_activity_latitude,
+                                                                    placeholder="e.g., 42.5364",
+                                                                    width="100%",
+                                                                ),
+                                                                width="100%",
+                                                                align_items="start",
+                                                            ),
+                                                            rx.vstack(
+                                                                rx.text(
+                                                                    "Longitude",
+                                                                    size="1",
+                                                                    color="var(--gray-10)",
+                                                                ),
+                                                                rx.input(
+                                                                    id="activity_longitude_hidden",
+                                                                    type="text",
+                                                                    value=State.activity_longitude,
+                                                                    on_change=State.set_activity_longitude,
+                                                                    placeholder="e.g., -72.5278",
+                                                                    width="100%",
+                                                                ),
+                                                                width="100%",
+                                                                align_items="start",
+                                                            ),
+                                                            spacing="2",
                                                             width="100%",
                                                         ),
                                                         width="100%",
                                                         align_items="start",
+                                                        margin_bottom="2",
                                                     ),
-                                                    rx.vstack(
-                                                        rx.text("Longitude", size="1", color="var(--gray-10)"),
-                                                        rx.input(
-                                                            id="activity_longitude_hidden",
-                                                            type="text",
-                                                            value=State.activity_longitude,
-                                                            on_change=State.set_activity_longitude,
-                                                            placeholder="e.g., -72.5278",
-                                                            width="100%",
-                                                        ),
+                                                    rx.box(
+                                                        id="create_activity_map",
                                                         width="100%",
-                                                        align_items="start",
+                                                        height="400px",
+                                                        border_radius="8px",
+                                                        border="1px solid var(--gray-6)",
+                                                        margin_top="2",
+                                                        display="block",
                                                     ),
-                                                    spacing="2",
-                                                    width="100%",
+                                                    rx.text(
+                                                        "Click on the map to set the location. You can also drag the marker to adjust.",
+                                                        size="1",
+                                                        color="var(--gray-10)",
+                                                        margin_top="2",
+                                                    ),
                                                 ),
-                                                width="100%",
-                                                align_items="start",
-                                                margin_bottom="2",
+                                                rx.center(
+                                                    rx.vstack(
+                                                        rx.icon(
+                                                            "map",
+                                                            size=48,
+                                                            color="var(--gray-9)",
+                                                        ),
+                                                        rx.text(
+                                                            "Google Maps API Key not configured",
+                                                            size="3",
+                                                            color="var(--gray-11)",
+                                                        ),
+                                                        spacing="2",
+                                                    ),
+                                                    height="400px",
+                                                ),
                                             ),
-                                            rx.box(
-                                                id="create_activity_map",
-                                                width="100%",
-                                                height="400px",
-                                                border_radius="8px",
-                                                border="1px solid var(--gray-6)",
-                                                margin_top="2",
-                                                display="block",
-                                            ),
+                                        ),
+                                    ),
+                                    width="100%",
+                                    align_items="start",
+                                ),
+                                rx.cond(
+                                    State.activity_log_location,
+                                    rx.hstack(
+                                        rx.vstack(
                                             rx.text(
-                                                "Click on the map to set the location. You can also drag the marker to adjust.",
-                                                size="1",
-                                                color="var(--gray-10)",
-                                                margin_top="2",
+                                                "Latitude",
+                                                weight="bold",
+                                                size="2",
+                                                margin_bottom="1",
                                             ),
-                                        ),
-                                        rx.center(
-                                            rx.vstack(
-                                                rx.icon("map", size=48, color="var(--gray-9)"),
-                                                rx.text(
-                                                    "Google Maps API Key not configured",
-                                                    size="3",
-                                                    color="var(--gray-11)",
-                                                ),
-                                                spacing="2",
+                                            rx.input(
+                                                placeholder="e.g., 42.667144",
+                                                value=State.activity_latitude,
+                                                on_change=State.set_activity_latitude,
+                                                width="100%",
                                             ),
-                                            height="400px",
+                                            width="100%",
+                                            align_items="start",
                                         ),
+                                        rx.vstack(
+                                            rx.text(
+                                                "Longitude",
+                                                weight="bold",
+                                                size="2",
+                                                margin_bottom="1",
+                                            ),
+                                            rx.input(
+                                                placeholder="e.g., -72.481655",
+                                                value=State.activity_longitude,
+                                                on_change=State.set_activity_longitude,
+                                                width="100%",
+                                            ),
+                                            width="100%",
+                                            align_items="start",
+                                        ),
+                                        spacing="4",
+                                        width="100%",
                                     ),
                                 ),
-                            ),
-                            width="100%",
-                            align_items="start",
-                        ),
-                        rx.cond(
-                            State.activity_log_location,
-                            rx.hstack(
                                 rx.vstack(
                                     rx.text(
-                                        "Latitude",
+                                        "Distance",
                                         weight="bold",
                                         size="2",
                                         margin_bottom="1",
                                     ),
                                     rx.input(
-                                        placeholder="e.g., 42.667144",
-                                        value=State.activity_latitude,
-                                        on_change=State.set_activity_latitude,
+                                        placeholder="e.g., 15 min walk",
+                                        value=State.activity_distance,
+                                        on_change=State.set_activity_distance,
                                         width="100%",
                                     ),
                                     width="100%",
                                     align_items="start",
                                 ),
-                                rx.vstack(
-                                    rx.text(
-                                        "Longitude",
-                                        weight="bold",
-                                        size="2",
-                                        margin_bottom="1",
-                                    ),
-                                    rx.input(
-                                        placeholder="e.g., -72.481655",
-                                        value=State.activity_longitude,
-                                        on_change=State.set_activity_longitude,
+                                rx.hstack(
+                                    rx.vstack(
+                                        rx.text(
+                                            "Date",
+                                            weight="bold",
+                                            size="2",
+                                            margin_bottom="1",
+                                        ),
+                                        rx.input(
+                                            type_="date",
+                                            placeholder="YYYY-MM-DD",
+                                            value=State.activity_date,
+                                            on_change=State.set_activity_date,
+                                            width="100%",
+                                        ),
                                         width="100%",
+                                        align_items="start",
                                     ),
+                                    rx.vstack(
+                                        rx.text(
+                                            "Time",
+                                            weight="bold",
+                                            size="2",
+                                            margin_bottom="1",
+                                        ),
+                                        rx.input(
+                                            type_="time",
+                                            placeholder="HH:MM",
+                                            value=State.activity_time,
+                                            on_change=State.set_activity_time,
+                                            width="100%",
+                                        ),
+                                        width="100%",
+                                        align_items="start",
+                                    ),
+                                    spacing="4",
                                     width="100%",
-                                    align_items="start",
+                                ),
+                                rx.button(
+                                    "Create Activity",
+                                    id="create_activity_button",
+                                    on_click=State.create_activity,
+                                    size="3",
+                                    width="100%",
+                                    color_scheme="teal",
+                                    margin_top="6",
                                 ),
                                 spacing="4",
                                 width="100%",
                             ),
-                        ),
-                        rx.vstack(
-                            rx.text(
-                                "Distance", weight="bold", size="2", margin_bottom="1"
-                            ),
-                            rx.input(
-                                placeholder="e.g., 15 min walk",
-                                value=State.activity_distance,
-                                on_change=State.set_activity_distance,
-                                width="100%",
-                            ),
                             width="100%",
-                            align_items="start",
-                        ),
-                        rx.hstack(
-                            rx.vstack(
-                                rx.text(
-                                    "Date", weight="bold", size="2", margin_bottom="1"
-                                ),
-                                rx.input(
-                                    type_="date",
-                                    placeholder="YYYY-MM-DD",
-                                    value=State.activity_date,
-                                    on_change=State.set_activity_date,
-                                    width="100%",
-                                ),
-                                width="100%",
-                                align_items="start",
-                            ),
-                            rx.vstack(
-                                rx.text(
-                                    "Time", weight="bold", size="2", margin_bottom="1"
-                                ),
-                                rx.input(
-                                    type_="time",
-                                    placeholder="HH:MM",
-                                    value=State.activity_time,
-                                    on_change=State.set_activity_time,
-                                    width="100%",
-                                ),
-                                width="100%",
-                                align_items="start",
-                            ),
-                            spacing="4",
-                            width="100%",
-                        ),
-                        rx.button(
-                            "Create Activity",
-                            id="create_activity_button",
-                            on_click=State.create_activity,
-                            size="3",
-                            width="100%",
-                            color_scheme="teal",
-                            margin_top="6",
-                        ),
-                        spacing="4",
-                        width="100%",
-                    ),
-                    width="100%",
-                    max_width="600px",
-                    padding="6",
-                    box_shadow="lg",
+                            max_width="600px",
+                            padding="6",
+                            box_shadow="lg",
                         ),
                         padding_y="8",
                         width="100%",
@@ -687,18 +733,18 @@ def create_activity() -> rx.Component:
                 # Login Prompt if not authenticated
                 rx.center(
                     rx.vstack(
-                    rx.heading("Please Login", size="6"),
-                    rx.text("You need to be logged in to create an activity."),
-                    rx.cond(
-                        GOOGLE_CLIENT_ID != "",
-                        google_oauth_provider(
-                            google_login(
-                                on_success=State.on_google_login_success,
+                        rx.heading("Please Login", size="6"),
+                        rx.text("You need to be logged in to create an activity."),
+                        rx.cond(
+                            GOOGLE_CLIENT_ID != "",
+                            google_oauth_provider(
+                                google_login(
+                                    on_success=State.on_google_login_success,
+                                ),
+                                client_id=GOOGLE_CLIENT_ID,
                             ),
-                            client_id=GOOGLE_CLIENT_ID,
+                            rx.text("Google OAuth not configured.", color="red"),
                         ),
-                        rx.text("Google OAuth not configured.", color="red"),
-                    ),
                         spacing="4",
                         align="center",
                     ),
@@ -707,5 +753,5 @@ def create_activity() -> rx.Component:
                 ),
             ),
         ),
-        on_mount=State.clear_activity_form,
+        on_mount=[State.clear_message, State.clear_activity_form],
     )
