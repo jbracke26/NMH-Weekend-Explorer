@@ -103,6 +103,10 @@ def my_activities() -> rx.Component:
                 width="100%",
             ),
         ),
-        on_mount=[State.load_activities, State.set_hide_header_login(True)],
+        on_mount=[
+            State.clear_message,
+            State.load_activities,
+            State.set_hide_header_login(True),
+        ],
         on_unmount=State.set_hide_header_login(False),
     )

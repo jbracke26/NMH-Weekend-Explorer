@@ -149,7 +149,7 @@ def explore() -> rx.Component:
                 width="100%",
                 spacing="0",
             ),
-            on_mount=State.load_activities,
+            on_mount=State.on_page_load,
             min_height="100vh",
         )
     )

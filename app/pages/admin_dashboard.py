@@ -81,5 +81,5 @@ def admin_dashboard():
                 spacing="4",
             ),
         ),
-        on_mount=AdminState.load_activities,
+        on_mount=AdminState.on_admin_page_load,
     )

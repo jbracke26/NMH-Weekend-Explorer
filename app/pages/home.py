@@ -12,11 +12,11 @@ GOOGLE_MAPS_API_KEY = _config.GOOGLE_MAPS_API_KEY or ""
 
 def index():
     return layout(
-            rx.vstack(
+        rx.vstack(
             rx.box(
                 rx.heading("My Activities", size="5", margin_bottom="3"),
-        rx.cond(
-            State.is_authenticated,
+                rx.cond(
+                    State.is_authenticated,
                     rx.cond(
                         State.my_activities_list,
                         rx.hstack(
@@ -24,7 +24,7 @@ def index():
                                 State.my_activities_list,
                                 lambda activity: rx.link(
                                     rx.card(
-            rx.vstack(
+                                        rx.vstack(
                                             rx.text(
                                                 activity["title"],
                                                 weight="bold",
@@ -47,7 +47,7 @@ def index():
                                                     activity["creator_id"]
                                                     == State.current_user_id,
                                                     "green",
-                rx.cond(
+                                                    rx.cond(
                                                         activity.get("chaperone_id")
                                                         == State.current_user_id,
                                                         "purple",
@@ -60,7 +60,7 @@ def index():
                                             spacing="1",
                                         ),
                                         min_width="200px",
-                        height="100px",
+                                        height="100px",
                                         cursor="pointer",
                                         _hover={"box_shadow": "md"},
                                     ),
@@ -91,7 +91,7 @@ def index():
             ),
             rx.hstack(
                 rx.box(
-                rx.cond(
+                    rx.cond(
                         GOOGLE_MAPS_API_KEY != "",
                         rx.fragment(
                             rx.script(
@@ -475,7 +475,7 @@ def index():
                                         rx.text(
                                             activity["title"],
                                             weight="bold",
-                    size="3",
+                                            size="3",
                                         ),
                                         rx.hstack(
                                             rx.badge(
@@ -503,15 +503,15 @@ def index():
                                                 None,
                                             ),
                                             spacing="2",
-                ),
-                rx.cond(
+                                        ),
+                                        rx.cond(
                                             activity["admin_signed_up"],
                                             rx.text(
                                                 "Chaperone assigned",
                                                 size="1",
                                                 color="var(--green-9)",
-                ),
-                rx.cond(
+                                            ),
+                                            rx.cond(
                                                 activity.get("needs_chaperone", False),
                                                 rx.text(
                                                     "Needs chaperone",
@@ -538,20 +538,20 @@ def index():
                                         "border_color": "var(--gray-7)",
                                     },
                                     transition="all 0.2s ease",
-                        width="100%",
+                                    width="100%",
                                 ),
                                 href=f"/activity/{activity['id']}",
                                 text_decoration="none",
                                 color="inherit",
-                    ),
-                ),
+                            ),
+                        ),
                         spacing="2",
-                width="100%",
-            ),
-                rx.link(
-                    rx.button(
+                        width="100%",
+                    ),
+                    rx.link(
+                        rx.button(
                             "Create Activity",
-                        size="3",
+                            size="3",
                             width="100%",
                             margin_top="4",
                         ),
@@ -566,5 +566,5 @@ def index():
             width="100%",
             spacing="0",
         ),
-        on_mount=State.load_activities,
+        on_mount=State.on_page_load,
     )

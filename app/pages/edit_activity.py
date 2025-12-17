@@ -270,5 +270,5 @@ def edit_activity() -> rx.Component:
                 width="100%",
             ),
         ),
-        on_mount=State.load_activity_for_edit,
+        on_mount=[State.clear_message, State.load_activity_for_edit],
     )

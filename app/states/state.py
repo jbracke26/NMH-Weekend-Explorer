@@ -39,7 +39,7 @@ class State(rx.State):
 
     message: str = ""
     message_type: str = "info"
-    
+
     intended_role: str = ""  # "student" or "teacher"
 
     current_activity: dict = {}
@@ -105,7 +105,7 @@ class State(rx.State):
             self.activity_latitude = ""
             self.activity_longitude = ""
             self.activity_log_location = False
-    
+
     def toggle_use_map_for_location(self):
         """Toggle the use_map_for_location state."""
         self.use_map_for_location = not self.use_map_for_location
@@ -197,8 +197,6 @@ class State(rx.State):
             acts = [a for a in acts if a.id != self.current_activity["id"]]
             save_activities(acts)
 
-            self.message = "Activity deleted successfully!"
-            self.message_type = "success"
             self.load_activities()
 
             return rx.redirect("/explore")
@@ -343,26 +341,46 @@ class State(rx.State):
             longitude = None
             if self.use_map_for_location:
                 # First, try to get from state (in case it was synced)
-                lat_str = str(self.activity_latitude).strip() if self.activity_latitude else ""
-                lng_str = str(self.activity_longitude).strip() if self.activity_longitude else ""
-                
+                lat_str = (
+                    str(self.activity_latitude).strip()
+                    if self.activity_latitude
+                    else ""
+                )
+                lng_str = (
+                    str(self.activity_longitude).strip()
+                    if self.activity_longitude
+                    else ""
+                )
+
                 # Debug logging
-                print(f"DEBUG create_activity - use_map_for_location: {self.use_map_for_location}")
-                print(f"DEBUG create_activity - activity_latitude: '{self.activity_latitude}' (type: {type(self.activity_latitude)})")
-                print(f"DEBUG create_activity - activity_longitude: '{self.activity_longitude}' (type: {type(self.activity_longitude)})")
-                print(f"DEBUG create_activity - lat_str: '{lat_str}', lng_str: '{lng_str}'")
-                
+                print(
+                    f"DEBUG create_activity - use_map_for_location: {self.use_map_for_location}"
+                )
+                print(
+                    f"DEBUG create_activity - activity_latitude: '{self.activity_latitude}' (type: {type(self.activity_latitude)})"
+                )
+                print(
+                    f"DEBUG create_activity - activity_longitude: '{self.activity_longitude}' (type: {type(self.activity_longitude)})"
+                )
+                print(
+                    f"DEBUG create_activity - lat_str: '{lat_str}', lng_str: '{lng_str}'"
+                )
+
                 # Try to get from state first
                 if lat_str and lng_str:
                     try:
                         latitude = float(lat_str)
                         longitude = float(lng_str)
-                        print(f"DEBUG: Using coordinates from state - lat: {latitude}, lng: {longitude}")
+                        print(
+                            f"DEBUG: Using coordinates from state - lat: {latitude}, lng: {longitude}"
+                        )
                     except ValueError:
-                        print(f"DEBUG: Invalid coordinates in state - lat: {lat_str}, lng: {lng_str}")
+                        print(
+                            f"DEBUG: Invalid coordinates in state - lat: {lat_str}, lng: {lng_str}"
+                        )
                         latitude = None
                         longitude = None
-                
+
                 # If coordinates are not in state, try to get from JavaScript window object
                 # This is done via a script that reads window._pendingActivityCoordinates
                 # For now, we'll use rx.script to execute JavaScript and get the coordinates
@@ -371,8 +389,12 @@ class State(rx.State):
                 # If that fails, coordinates will be None
                 if not latitude or not longitude:
                     print(f"DEBUG: Coordinates not in state")
-                    print(f"DEBUG: JavaScript should have set window._pendingActivityCoordinates")
-                    print(f"DEBUG: Note: If coordinates are None, the map may not have been used or coordinates were not set")
+                    print(
+                        f"DEBUG: JavaScript should have set window._pendingActivityCoordinates"
+                    )
+                    print(
+                        f"DEBUG: Note: If coordinates are None, the map may not have been used or coordinates were not set"
+                    )
 
             new_activity = Activity(
                 id=self._next_id(),
@@ -392,20 +414,28 @@ class State(rx.State):
                 latitude=latitude,
                 longitude=longitude,
             )
-            
+
             # Debug: Print activity data before saving
-            print(f"DEBUG: Creating activity with coordinates - lat: {latitude}, lng: {longitude}")
-            print(f"DEBUG: Activity object - latitude: {new_activity.latitude}, longitude: {new_activity.longitude}")
+            print(
+                f"DEBUG: Creating activity with coordinates - lat: {latitude}, lng: {longitude}"
+            )
+            print(
+                f"DEBUG: Activity object - latitude: {new_activity.latitude}, longitude: {new_activity.longitude}"
+            )
 
             acts.append(new_activity)
             save_activities(acts)
-            
+
             # Debug: Verify saved data
             saved_acts = load_activities()
-            saved_activity = next((a for a in saved_acts if a.id == new_activity.id), None)
+            saved_activity = next(
+                (a for a in saved_acts if a.id == new_activity.id), None
+            )
             if saved_activity:
-                print(f"DEBUG: Saved activity coordinates - lat: {saved_activity.latitude}, lng: {saved_activity.longitude}")
-            
+                print(
+                    f"DEBUG: Saved activity coordinates - lat: {saved_activity.latitude}, lng: {saved_activity.longitude}"
+                )
+
             self.load_activities()
 
             self.activity_title = ""
@@ -791,16 +821,23 @@ class State(rx.State):
             self.is_admin = False
 
         self.is_authenticated = True
-        
+
         # Check if user logged in with the correct role button
         if self.intended_role:
             from app.config import Config
+
             config = Config()
-            
-            if self.intended_role == "teacher" and self.current_user_email not in config.TEACHER_EMAILS:
+
+            if (
+                self.intended_role == "teacher"
+                and self.current_user_email not in config.TEACHER_EMAILS
+            ):
                 self.message = "You logged in as a teacher but your email isn't in the teacher list. You're still logged in as a student."
                 self.message_type = "error"
-            elif self.intended_role == "student" and self.current_user_email in config.TEACHER_EMAILS:
+            elif (
+                self.intended_role == "student"
+                and self.current_user_email in config.TEACHER_EMAILS
+            ):
                 self.message = "You logged in as a student but you're actually a teacher. You're still logged in with teacher privileges."
                 self.message_type = "error"
             else:
@@ -814,17 +851,27 @@ class State(rx.State):
         """Handle student login button click"""
         self.intended_role = "student"
         self.on_google_login_success(response)
-    
+
     def on_teacher_login_success(self, response: dict):
         """Handle teacher login button click"""
         self.intended_role = "teacher"
         self.on_google_login_success(response)
-    
+
     def set_message(self, message: str):
         """Set or clear the message"""
         self.message = message
         if not message:
             self.message_type = "info"
+
+    def clear_message(self):
+        """Clear the current message"""
+        self.message = ""
+        self.message_type = "info"
+
+    def on_page_load(self):
+        """Called when a page loads - clear messages and load activities"""
+        self.clear_message()
+        self.load_activities()
 
     def check_login(self):
         if not self.is_authenticated:

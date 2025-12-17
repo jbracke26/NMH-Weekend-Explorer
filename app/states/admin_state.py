@@ -133,3 +133,8 @@ class AdminState(State):
         self.message = "Activity deleted"
         self.message_type = "success"
         self.load_activities()
+
+    def on_admin_page_load(self):
+        """Called when an admin page loads - clear messages and load activities"""
+        self.clear_message()
+        self.load_activities()

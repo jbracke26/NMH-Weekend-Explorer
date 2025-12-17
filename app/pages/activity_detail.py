@@ -48,7 +48,8 @@ def activity_detail() -> rx.Component:
                             rx.hstack(
                                 rx.icon("map-pin", color="gray.500"),
                                 rx.cond(
-                                    (State.current_activity.get("latitude") != None) & (State.current_activity.get("longitude") != None),
+                                    (State.current_activity.get("latitude") != None)
+                                    & (State.current_activity.get("longitude") != None),
                                     rx.link(
                                         rx.text(
                                             State.current_activity["location"],
@@ -308,7 +309,7 @@ def activity_detail() -> rx.Component:
                     rx.spinner(color=f"{accent_color}.500", size="3"), height="100vh"
                 ),
             ),
-            on_mount=State.load_activity_details,
+            on_mount=[State.clear_message, State.load_activity_details],
             min_height="100vh",
         )
     )
