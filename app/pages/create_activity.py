@@ -82,14 +82,6 @@ def create_activity() -> rx.Component:
                             window.createActivityMapInitAttempts = 0;
                             
                             window.initCreateActivityMap = function() {{
-                                // Prevent too many attempts
-                                if (window.createActivityMapInitAttempts > 10) {{
-                                    console.error('Too many map initialization attempts, giving up');
-                                    return;
-                                }}
-                                
-                                window.createActivityMapInitAttempts++;
-                                
                                 const mapContainer = document.getElementById('create_activity_map');
                                 if (!mapContainer) {{
                                     console.log('Map container not found');
@@ -97,63 +89,33 @@ def create_activity() -> rx.Component:
                                 }}
                                 
                                 // Check if container is visible
-                                const computedStyle = window.getComputedStyle(mapContainer);
                                 const isVisible = mapContainer.offsetParent !== null && 
-                                                 computedStyle.display !== 'none' &&
-                                                 computedStyle.visibility !== 'hidden' &&
-                                                 mapContainer.offsetWidth > 0 &&
+                                                 mapContainer.offsetWidth > 0 && 
                                                  mapContainer.offsetHeight > 0;
                                 
                                 if (!isVisible) {{
                                     console.log('Map container not visible yet');
+                                    setTimeout(window.initCreateActivityMap, 200);
+                                    return;
+                                }}
+                                
+                                // Check if already initialized
+                                if (window.createActivityMap && window.createActivityMapInitialized) {{
+                                    console.log('Map already initialized');
                                     return;
                                 }}
                                 
                                 // Ensure Google Maps API is loaded
                                 if (!window.google || !window.google.maps || !window.google.maps.Map) {{
-                                    console.log('Google Maps API not ready, ensuring it is loaded...');
+                                    console.log('Google Maps API not ready, loading...');
                                     ensureGoogleMapsApi(function() {{
                                         setTimeout(window.initCreateActivityMap, 100);
                                     }});
                                     return;
                                 }}
                                 
-                                // Prevent double initialization
-                                if (window.createActivityMap && window.createActivityMapInitialized) {{
-                                    try {{
-                                        const mapDiv = window.createActivityMap.getDiv();
-                                        if (mapDiv && mapDiv === mapContainer) {{
-                                            console.log('Map already initialized and attached');
-                                            // Just trigger resize
-                                            setTimeout(function() {{
-                                                if (window.google && window.google.maps && window.google.maps.event && window.createActivityMap) {{
-                                                    window.google.maps.event.trigger(window.createActivityMap, 'resize');
-                                                }}
-                                            }}, 100);
-                                            return;
-                                        }}
-                                    }} catch (e) {{
-                                        console.log('Error checking map attachment, reinitializing...');
-                                        window.cleanupCreateActivityMap();
-                                    }}
-                                }}
-                                
                                 try {{
-                                    // Ensure container has size
-                                    if (mapContainer.offsetWidth < 100) {{
-                                        mapContainer.style.width = '100%';
-                                    }}
-                                    if (mapContainer.offsetHeight < 100) {{
-                                        mapContainer.style.height = '400px';
-                                    }}
-                                    
-                                    // Wait a bit more if container still doesn't have proper size
-                                    if (mapContainer.offsetWidth < 100 || mapContainer.offsetHeight < 100) {{
-                                        setTimeout(window.initCreateActivityMap, 200);
-                                        return;
-                                    }}
-                                    
-                                    console.log('Initializing map with container size:', mapContainer.offsetWidth, 'x', mapContainer.offsetHeight);
+                                    console.log('Initializing map...');
                                     
                                     // Initialize map
                                     window.createActivityMap = new window.google.maps.Map(mapContainer, {{
@@ -208,130 +170,50 @@ def create_activity() -> rx.Component:
                                     }});
                                     
                                     window.createActivityMapInitialized = true;
-                                    window.createActivityMapInitAttempts = 0;
-                                    console.log('Create activity map initialized successfully');
+                                    console.log('Map initialized successfully');
                                 }} catch (error) {{
-                                    console.error('Error initializing create activity map:', error);
-                                    window.createActivityMapInitialized = false;
-                                    // Retry after a delay
+                                    console.error('Error initializing map:', error);
                                     setTimeout(function() {{
                                         window.initCreateActivityMap();
                                     }}, 500);
                                 }}
                             }};
                             
-                            // NEW APPROACH: Directly update Reflex state using a more reliable method
+                            // SIMPLE APPROACH: Just set the text box values directly
                             function updateLocationFromMap(lat, lng) {{
-                                console.log('updateLocationFromMap called with:', lat, lng);
+                                console.log('=== SIMPLE: updateLocationFromMap - called with:', lat, lng);
                                 const latStr = lat.toString();
                                 const lngStr = lng.toString();
                                 
-                                // Store coordinates in window object as backup
-                                window._tempLatitude = latStr;
-                                window._tempLongitude = lngStr;
-                                window._activityCoordinates = {{
-                                    latitude: parseFloat(latStr),
-                                    longitude: parseFloat(lngStr)
-                                }};
-                                
-                                // Get hidden inputs
+                                // Find text box inputs
                                 const latInput = document.getElementById('activity_latitude_hidden');
                                 const lngInput = document.getElementById('activity_longitude_hidden');
                                 
-                                if (!latInput || !lngInput) {{
-                                    console.error('Hidden inputs not found!');
-                                    return;
+                                if (latInput && lngInput) {{
+                                    // Simply set the values
+                                    latInput.value = latStr;
+                                    lngInput.value = lngStr;
+                                    
+                                    // Trigger input event (Reflex listens to this)
+                                    latInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                                    lngInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                                    
+                                    // Trigger change event
+                                    latInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                                    lngInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
+                                    
+                                    console.log('=== Coordinates set in text boxes:', latInput.value, lngInput.value, '===');
+                                }} else {{
+                                    console.warn('Text box inputs not found');
                                 }}
                                 
-                                // NEW APPROACH: Use React's synthetic event system if available
-                                // Otherwise, use native events with proper structure
-                                function updateInputValue(input, value) {{
-                                    // Method 1: Direct value assignment
-                                    input.value = value;
-                                    
-                                    // Method 2: Set attribute
-                                    input.setAttribute('value', value);
-                                    
-                                    // Method 3: Use Object.defineProperty
-                                    try {{
-                                        Object.defineProperty(input, 'value', {{
-                                            value: value,
-                                            writable: true,
-                                            configurable: true,
-                                            enumerable: true
-                                        }});
-                                    }} catch (e) {{
-                                        // If defineProperty fails, just set value normally
-                                        input.value = value;
-                                    }}
-                                    
-                                    // Method 4: Trigger React's onChange if available
-                                    if (input._valueTracker) {{
-                                        input._valueTracker.setValue('');
-                                        input._valueTracker.setValue(value);
-                                    }}
-                                    
-                                    // Method 5: Dispatch native events
-                                    const inputEvent = new Event('input', {{ bubbles: true, cancelable: true }});
-                                    const changeEvent = new Event('change', {{ bubbles: true, cancelable: true }});
-                                    
-                                    Object.defineProperty(inputEvent, 'target', {{ value: input, enumerable: true }});
-                                    Object.defineProperty(changeEvent, 'target', {{ value: input, enumerable: true }});
-                                    
-                                    input.dispatchEvent(inputEvent);
-                                    input.dispatchEvent(changeEvent);
-                                    
-                                    // Method 6: Try React's synthetic event system
-                                    if (window.React && window.ReactDOM) {{
-                                        try {{
-                                            const nativeEvent = new Event('input', {{ bubbles: true }});
-                                            Object.defineProperty(nativeEvent, 'target', {{ value: input }});
-                                            const syntheticEvent = window.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED?.ReactCurrentDispatcher?.current?.createSyntheticEvent?.(nativeEvent);
-                                            if (syntheticEvent) {{
-                                                input.dispatchEvent(syntheticEvent);
-                                            }}
-                                        }} catch (e) {{
-                                            // React synthetic events not available, use native events
-                                        }}
-                                    }}
+                                // Store in localStorage as backup
+                                try {{
+                                    localStorage.setItem('activity_latitude', latStr);
+                                    localStorage.setItem('activity_longitude', lngStr);
+                                }} catch (e) {{
+                                    console.error('Failed to save to localStorage:', e);
                                 }}
-                                
-                                // Update both inputs
-                                updateInputValue(latInput, latStr);
-                                updateInputValue(lngInput, lngStr);
-                                
-                                console.log('Coordinates updated - lat:', latInput.value, 'lng:', lngInput.value);
-                                
-                                // Force a state update by triggering multiple events
-                                setTimeout(function() {{
-                                    // Trigger blur events to ensure state is updated
-                                    latInput.focus();
-                                    setTimeout(function() {{
-                                        latInput.blur();
-                                        const blurEvent = new Event('blur', {{ bubbles: true, cancelable: true }});
-                                        Object.defineProperty(blurEvent, 'target', {{ value: latInput, enumerable: true }});
-                                        latInput.dispatchEvent(blurEvent);
-                                        
-                                        lngInput.focus();
-                                        setTimeout(function() {{
-                                            lngInput.blur();
-                                            const blurEvent2 = new Event('blur', {{ bubbles: true, cancelable: true }});
-                                            Object.defineProperty(blurEvent2, 'target', {{ value: lngInput, enumerable: true }});
-                                            lngInput.dispatchEvent(blurEvent2);
-                                            
-                                            // Final change event
-                                            const finalChange = new Event('change', {{ bubbles: true, cancelable: true }});
-                                            Object.defineProperty(finalChange, 'target', {{ value: latInput, enumerable: true }});
-                                            latInput.dispatchEvent(finalChange);
-                                            
-                                            const finalChange2 = new Event('change', {{ bubbles: true, cancelable: true }});
-                                            Object.defineProperty(finalChange2, 'target', {{ value: lngInput, enumerable: true }});
-                                            lngInput.dispatchEvent(finalChange2);
-                                            
-                                            console.log('Final coordinates after all events:', latInput.value, lngInput.value);
-                                        }}, 100);
-                                    }}, 100);
-                                }}, 100);
                             }}
                             
                             window.cleanupCreateActivityMap = function() {{
@@ -347,132 +229,47 @@ def create_activity() -> rx.Component:
                                 }}
                                 window.createActivityMapInitialized = false;
                                 window.createActivityMapInitAttempts = 0;
+                                
+                                // Clear localStorage when map is cleaned up
+                                try {{
+                                    localStorage.removeItem('activity_latitude');
+                                    localStorage.removeItem('activity_longitude');
+                                    console.log('=== Cleared coordinates from localStorage ===');
+                                }} catch (e) {{
+                                    console.error('Failed to clear localStorage:', e);
+                                }}
                             }};
                             
-                            // Function to force map initialization when container becomes visible
+                            // SIMPLE APPROACH: Just call initCreateActivityMap
                             window.forceInitCreateActivityMap = function() {{
-                                const mapContainer = document.getElementById('create_activity_map');
-                                if (!mapContainer) {{
-                                    return;
-                                }}
-                                
-                                // Reset initialization flag if container was hidden
-                                const computedStyle = window.getComputedStyle(mapContainer);
-                                const isVisible = mapContainer.offsetParent !== null && 
-                                                 computedStyle.display !== 'none' &&
-                                                 computedStyle.visibility !== 'hidden';
-                                
-                                if (!isVisible) {{
-                                    window.createActivityMapInitialized = false;
-                                    window.createActivityMapInitAttempts = 0;
-                                    return;
-                                }}
-                                
-                                // If already initialized and attached, just trigger resize
-                                if (window.createActivityMap && window.createActivityMapInitialized) {{
-                                    try {{
-                                        const mapDiv = window.createActivityMap.getDiv();
-                                        if (mapDiv && mapDiv === mapContainer) {{
-                                            setTimeout(function() {{
-                                                if (window.google && window.google.maps && window.google.maps.event && window.createActivityMap) {{
-                                                    window.google.maps.event.trigger(window.createActivityMap, 'resize');
-                                                }}
-                                            }}, 100);
-                                            return;
-                                        }}
-                                    }} catch (e) {{
-                                        console.log('Error checking map attachment, reinitializing...');
-                                        window.cleanupCreateActivityMap();
-                                    }}
-                                }}
-                                
-                                // Ensure Google Maps API is loaded first
-                                if (!window.google || !window.google.maps || !window.google.maps.Map) {{
-                                    ensureGoogleMapsApi(function() {{
-                                        window.forceInitCreateActivityMap();
-                                    }});
-                                    return;
-                                }}
-                                
-                                // Wait for container to have size, then initialize
-                                const checkAndInit = function(attempts) {{
-                                    if (attempts > 30) {{
-                                        console.log('Gave up initializing map after', attempts, 'attempts');
-                                        return;
-                                    }}
-                                    
-                                    const width = mapContainer.offsetWidth || mapContainer.clientWidth;
-                                    const height = mapContainer.offsetHeight || mapContainer.clientHeight;
-                                    
-                                    if (width > 0 && height > 0) {{
-                                        window.initCreateActivityMap();
-                                    }} else {{
-                                        setTimeout(function() {{
-                                            checkAndInit(attempts + 1);
-                                        }}, 100);
-                                    }}
-                                }};
-                                
-                                checkAndInit(0);
+                                window.initCreateActivityMap();
                             }};
                             
-                            // Watch for map container visibility changes with MutationObserver
-                            const observer = new MutationObserver(function(mutations) {{
+                            // SIMPLE APPROACH: Just poll for map container and initialize when visible
+                            function checkAndInitMap() {{
                                 const mapContainer = document.getElementById('create_activity_map');
                                 if (mapContainer) {{
-                                    window.forceInitCreateActivityMap();
-                                }}
-                            }});
-                            
-                            // Start observing when DOM is ready
-                            if (document.readyState === 'loading') {{
-                                document.addEventListener('DOMContentLoaded', function() {{
-                                    observer.observe(document.body, {{
-                                        childList: true,
-                                        subtree: true,
-                                        attributes: true,
-                                        attributeFilter: ['style', 'class', 'display', 'id']
-                                    }});
+                                    const isVisible = mapContainer.offsetParent !== null && 
+                                                     mapContainer.offsetWidth > 0 && 
+                                                     mapContainer.offsetHeight > 0;
                                     
-                                    // Initial check after DOM is ready
-                                    setTimeout(function() {{
-                                        window.forceInitCreateActivityMap();
-                                    }}, 200);
-                                }});
-                            }} else {{
-                                observer.observe(document.body, {{
-                                    childList: true,
-                                    subtree: true,
-                                    attributes: true,
-                                    attributeFilter: ['style', 'class', 'display', 'id']
-                                }});
-                                
-                                // Initial check
-                                setTimeout(function() {{
-                                    window.forceInitCreateActivityMap();
-                                }}, 200);
+                                    if (isVisible && !window.createActivityMapInitialized) {{
+                                        console.log('Map container visible, initializing...');
+                                        window.initCreateActivityMap();
+                                    }}
+                                }}
                             }}
                             
-                            // Watch for switch changes and initialize map immediately
-                            const watchSwitch = function() {{
-                                const switchElement = document.querySelector('input[type="checkbox"][id*="use_map"], input[type="checkbox"]');
-                                if (switchElement) {{
-                                    switchElement.addEventListener('change', function() {{
-                                        console.log('Switch toggled, forcing map initialization...');
-                                        setTimeout(function() {{
-                                            window.forceInitCreateActivityMap();
-                                        }}, 300);
-                                    }});
-                                }} else {{
-                                    setTimeout(watchSwitch, 200);
-                                }}
-                            }};
+                            // Check periodically
+                            setInterval(checkAndInitMap, 500);
                             
-                            // Start watching for switch after DOM is ready
+                            // Also check when DOM is ready
                             if (document.readyState === 'loading') {{
-                                document.addEventListener('DOMContentLoaded', watchSwitch);
+                                document.addEventListener('DOMContentLoaded', function() {{
+                                    setTimeout(checkAndInitMap, 200);
+                                }});
                             }} else {{
-                                watchSwitch();
+                                setTimeout(checkAndInitMap, 200);
                             }}
                             
                             // Aggressive polling when map container exists but map is not initialized
@@ -490,66 +287,92 @@ def create_activity() -> rx.Component:
                                                      mapContainer.offsetHeight > 0;
                                     
                                     if (isVisible && !window.createActivityMapInitialized) {{
+                                        console.log('Aggressive check: Map container visible but not initialized (attempt', checkCount, ')');
                                         window.forceInitCreateActivityMap();
                                     }}
                                     
                                     // Stop aggressive checking after map is initialized or after many attempts
                                     if ((window.createActivityMapInitialized && isVisible) || checkCount > 50) {{
+                                        if (checkCount > 50) {{
+                                            console.log('Stopping aggressive check after', checkCount, 'attempts');
+                                        }}
                                         clearInterval(aggressiveCheck);
                                     }}
                                 }} else if (checkCount > 50) {{
+                                    console.log('Map container not found after', checkCount, 'attempts, stopping check');
                                     clearInterval(aggressiveCheck);
                                 }}
                             }}, 150);
                             
-                            // Simple interceptor: just sync coordinates to hidden inputs without preventing click
-                            // This avoids infinite loops by not re-triggering the button click
+                            // IMPROVED: Ensure text boxes have values and wait for Reflex state update
                             function setupCreateButtonInterceptor() {{
                                 const createButton = document.getElementById('create_activity_button');
                                 if (createButton) {{
                                     createButton.addEventListener('click', function(e) {{
-                                        console.log('Create Activity button clicked - syncing coordinates');
+                                        console.log('=== Create Activity button clicked - syncing coordinates ===');
                                         
-                                        // Get coordinates from multiple sources
-                                        const latInput = document.getElementById('activity_latitude_hidden');
-                                        const lngInput = document.getElementById('activity_longitude_hidden');
-                                        
+                                        // Get coordinates from localStorage (backup)
                                         let latStr = '';
                                         let lngStr = '';
                                         
-                                        // Try hidden inputs first
-                                        if (latInput && lngInput) {{
-                                            latStr = latInput.value || '';
-                                            lngStr = lngInput.value || '';
+                                        try {{
+                                            latStr = localStorage.getItem('activity_latitude') || '';
+                                            lngStr = localStorage.getItem('activity_longitude') || '';
+                                            console.log('Coordinates from localStorage:', latStr, lngStr);
+                                        }} catch (e) {{
+                                            console.error('Failed to read from localStorage:', e);
                                         }}
                                         
-                                        // Fallback to window object
-                                        if (!latStr || !lngStr) {{
-                                            latStr = window._tempLatitude || '';
-                                            lngStr = window._tempLongitude || '';
-                                        }}
+                                        // Get text box inputs
+                                        const latInput = document.getElementById('activity_latitude_hidden');
+                                        const lngInput = document.getElementById('activity_longitude_hidden');
                                         
-                                        console.log('Coordinates found:', latStr, lngStr);
-                                        
-                                        // If we have coordinates, sync them to hidden inputs
-                                        // Don't prevent click - just sync and let it proceed
+                                        // If we have coordinates in localStorage, always sync them to text boxes
                                         if (latStr && lngStr && latInput && lngInput) {{
+                                            console.log('Syncing coordinates from localStorage to text boxes...');
+                                            
+                                            // Set values
                                             latInput.value = latStr;
                                             lngInput.value = lngStr;
                                             
-                                            // Dispatch change events to update Reflex state
-                                            const changeEvent = new Event('change', {{ bubbles: true, cancelable: true }});
-                                            Object.defineProperty(changeEvent, 'target', {{ value: latInput, enumerable: true }});
-                                            latInput.dispatchEvent(changeEvent);
+                                            // Set attribute as well
+                                            latInput.setAttribute('value', latStr);
+                                            lngInput.setAttribute('value', lngStr);
                                             
-                                            const changeEvent2 = new Event('change', {{ bubbles: true, cancelable: true }});
-                                            Object.defineProperty(changeEvent2, 'target', {{ value: lngInput, enumerable: true }});
-                                            lngInput.dispatchEvent(changeEvent2);
+                                            // Trigger multiple events to ensure Reflex picks it up
+                                            ['input', 'change', 'blur'].forEach(function(eventType) {{
+                                                const event1 = new Event(eventType, {{ bubbles: true, cancelable: true, composed: true }});
+                                                Object.defineProperty(event1, 'target', {{ value: latInput, enumerable: true }});
+                                                latInput.dispatchEvent(event1);
+                                                
+                                                const event2 = new Event(eventType, {{ bubbles: true, cancelable: true, composed: true }});
+                                                Object.defineProperty(event2, 'target', {{ value: lngInput, enumerable: true }});
+                                                lngInput.dispatchEvent(event2);
+                                            }});
                                             
-                                            console.log('Coordinates synced to hidden inputs:', latInput.value, lngInput.value);
+                                            console.log('Coordinates synced - latInput.value:', latInput.value, 'lngInput.value:', lngInput.value);
+                                            
+                                            // Wait a bit for Reflex state to update before allowing click to proceed
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            
+                                            setTimeout(function() {{
+                                                console.log('Re-triggering button click after coordinate sync');
+                                                // Create and dispatch a new click event
+                                                const newClickEvent = new MouseEvent('click', {{
+                                                    bubbles: true,
+                                                    cancelable: true,
+                                                    view: window
+                                                }});
+                                                createButton.dispatchEvent(newClickEvent);
+                                            }}, 500); // Wait 500ms for Reflex state to update
+                                            
+                                            return;
+                                        }} else {{
+                                            console.log('No coordinates in localStorage or text boxes not found');
                                         }}
                                         
-                                        // Allow click to proceed normally - no preventDefault, no re-triggering
+                                        // If no coordinates or text boxes not found, proceed normally
                                         console.log('Proceeding with button click');
                                     }}, true); // Use capture phase
                                 }} else {{

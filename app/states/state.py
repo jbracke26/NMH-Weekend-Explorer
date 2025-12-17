@@ -337,42 +337,63 @@ class State(rx.State):
                 else ""
             )
 
-            # Get coordinates - try state first, then fallback to JavaScript window object
-            # JavaScript stores coordinates in window._pendingActivityCoordinates before calling create_activity
+            # DRASTIC CHANGE: Get coordinates from state (text boxes) with improved handling
             latitude = None
             longitude = None
-            if self.use_map_for_location:
-                # First, try to get from state (in case it was synced)
-                lat_str = str(self.activity_latitude).strip() if self.activity_latitude else ""
-                lng_str = str(self.activity_longitude).strip() if self.activity_longitude else ""
-                
-                # Debug logging
-                print(f"DEBUG create_activity - use_map_for_location: {self.use_map_for_location}")
-                print(f"DEBUG create_activity - activity_latitude: '{self.activity_latitude}' (type: {type(self.activity_latitude)})")
-                print(f"DEBUG create_activity - activity_longitude: '{self.activity_longitude}' (type: {type(self.activity_longitude)})")
-                print(f"DEBUG create_activity - lat_str: '{lat_str}', lng_str: '{lng_str}'")
-                
-                # Try to get from state first
-                if lat_str and lng_str:
-                    try:
+            
+            # Get coordinates from state (text boxes) - handle various types
+            lat_str = ""
+            lng_str = ""
+            
+            # Handle different types of activity_latitude/activity_longitude
+            if self.activity_latitude:
+                if isinstance(self.activity_latitude, (int, float)):
+                    lat_str = str(self.activity_latitude).strip()
+                elif isinstance(self.activity_latitude, str):
+                    lat_str = self.activity_latitude.strip()
+                else:
+                    lat_str = str(self.activity_latitude).strip()
+            else:
+                lat_str = ""
+            
+            if self.activity_longitude:
+                if isinstance(self.activity_longitude, (int, float)):
+                    lng_str = str(self.activity_longitude).strip()
+                elif isinstance(self.activity_longitude, str):
+                    lng_str = self.activity_longitude.strip()
+                else:
+                    lng_str = str(self.activity_longitude).strip()
+            else:
+                lng_str = ""
+            
+            # Debug logging
+            print(f"=== DRASTIC CHANGE: DEBUG create_activity ===")
+            print(f"use_map_for_location: {self.use_map_for_location}")
+            print(f"activity_latitude: '{self.activity_latitude}' (type: {type(self.activity_latitude)})")
+            print(f"activity_longitude: '{self.activity_longitude}' (type: {type(self.activity_longitude)})")
+            print(f"lat_str: '{lat_str}', lng_str: '{lng_str}'")
+            
+            # Try to get coordinates from text boxes (regardless of use_map_for_location)
+            # This allows coordinates to be saved even if entered manually
+            if lat_str and lng_str:
+                try:
+                    # Remove any whitespace and validate
+                    lat_str = lat_str.strip()
+                    lng_str = lng_str.strip()
+                    
+                    if lat_str and lng_str:
                         latitude = float(lat_str)
                         longitude = float(lng_str)
-                        print(f"DEBUG: Using coordinates from state - lat: {latitude}, lng: {longitude}")
-                    except ValueError:
-                        print(f"DEBUG: Invalid coordinates in state - lat: {lat_str}, lng: {lng_str}")
-                        latitude = None
-                        longitude = None
-                
-                # If coordinates are not in state, try to get from JavaScript window object
-                # This is done via a script that reads window._pendingActivityCoordinates
-                # For now, we'll use rx.script to execute JavaScript and get the coordinates
-                # However, since we can't directly access window object from Python,
-                # we'll rely on the state values being set by the JavaScript interceptor
-                # If that fails, coordinates will be None
-                if not latitude or not longitude:
-                    print(f"DEBUG: Coordinates not in state")
-                    print(f"DEBUG: JavaScript should have set window._pendingActivityCoordinates")
-                    print(f"DEBUG: Note: If coordinates are None, the map may not have been used or coordinates were not set")
+                        print(f"=== SUCCESS: Saving coordinates from text boxes - lat: {latitude}, lng: {longitude} ===")
+                    else:
+                        print(f"=== WARNING: Coordinates are empty strings after strip ===")
+                except (ValueError, TypeError) as e:
+                    print(f"=== ERROR: Invalid coordinates in text boxes - lat: '{lat_str}', lng: '{lng_str}', error: {e} ===")
+                    latitude = None
+                    longitude = None
+            else:
+                print(f"=== WARNING: Coordinates empty in text boxes - lat: '{lat_str}', lng: '{lng_str}' ===")
+                print(f"=== Coordinates will be None if not set ===")
 
             new_activity = Activity(
                 id=self._next_id(),
@@ -394,8 +415,8 @@ class State(rx.State):
             )
             
             # Debug: Print activity data before saving
-            print(f"DEBUG: Creating activity with coordinates - lat: {latitude}, lng: {longitude}")
-            print(f"DEBUG: Activity object - latitude: {new_activity.latitude}, longitude: {new_activity.longitude}")
+            print(f"=== DEBUG: Creating activity with coordinates - lat: {latitude}, lng: {longitude} ===")
+            print(f"=== DEBUG: Activity object - latitude: {new_activity.latitude}, longitude: {new_activity.longitude} ===")
 
             acts.append(new_activity)
             save_activities(acts)
@@ -404,7 +425,11 @@ class State(rx.State):
             saved_acts = load_activities()
             saved_activity = next((a for a in saved_acts if a.id == new_activity.id), None)
             if saved_activity:
-                print(f"DEBUG: Saved activity coordinates - lat: {saved_activity.latitude}, lng: {saved_activity.longitude}")
+                print(f"=== DEBUG: Saved activity coordinates - lat: {saved_activity.latitude}, lng: {saved_activity.longitude} ===")
+                if saved_activity.latitude is None or saved_activity.longitude is None:
+                    print(f"=== ERROR: Coordinates are NULL in saved activity! ===")
+                else:
+                    print(f"=== SUCCESS: Coordinates successfully saved to JSON! ===")
             
             self.load_activities()
 
@@ -501,14 +526,18 @@ class State(rx.State):
                     latitude = getattr(a, "latitude", None)
                     longitude = getattr(a, "longitude", None)
 
-                    if latitude and longitude:
-                        self.activity_log_location = True
+                    # Set use_map_for_location if coordinates exist
+                    if latitude is not None and longitude is not None:
+                        self.use_map_for_location = True
                         self.activity_latitude = str(latitude)
                         self.activity_longitude = str(longitude)
                     else:
-                        self.activity_log_location = False
+                        self.use_map_for_location = False
                         self.activity_latitude = ""
                         self.activity_longitude = ""
+                    
+                    # Keep activity_log_location for backward compatibility
+                    self.activity_log_location = self.use_map_for_location
 
                     return
 
@@ -571,25 +600,55 @@ class State(rx.State):
                     )
                     a.time = time_str
 
-                    # update map coordinates if enabled
-                    if self.activity_log_location:
-                        try:
-                            a.latitude = (
-                                float(self.activity_latitude)
-                                if self.activity_latitude
-                                else None
-                            )
-                            a.longitude = (
-                                float(self.activity_longitude)
-                                if self.activity_longitude
-                                else None
-                            )
-                        except ValueError:
-                            a.latitude = None
-                            a.longitude = None
+                    # Update map coordinates (use use_map_for_location or activity_log_location)
+                    # Get coordinates from text boxes (activity_latitude and activity_longitude)
+                    latitude = None
+                    longitude = None
+                    
+                    # Get coordinates from state (text boxes) - handle various types
+                    lat_str = ""
+                    lng_str = ""
+                    
+                    # Handle different types of activity_latitude/activity_longitude
+                    if self.activity_latitude:
+                        if isinstance(self.activity_latitude, (int, float)):
+                            lat_str = str(self.activity_latitude).strip()
+                        elif isinstance(self.activity_latitude, str):
+                            lat_str = self.activity_latitude.strip()
+                        else:
+                            lat_str = str(self.activity_latitude).strip()
                     else:
-                        a.latitude = None
-                        a.longitude = None
+                        lat_str = ""
+                    
+                    if self.activity_longitude:
+                        if isinstance(self.activity_longitude, (int, float)):
+                            lng_str = str(self.activity_longitude).strip()
+                        elif isinstance(self.activity_longitude, str):
+                            lng_str = self.activity_longitude.strip()
+                        else:
+                            lng_str = str(self.activity_longitude).strip()
+                    else:
+                        lng_str = ""
+                    
+                    # Try to get coordinates from text boxes
+                    if lat_str and lng_str:
+                        try:
+                            # Remove any whitespace and validate
+                            lat_str = lat_str.strip()
+                            lng_str = lng_str.strip()
+                            
+                            if lat_str and lng_str:
+                                latitude = float(lat_str)
+                                longitude = float(lng_str)
+                                print(f"=== SUCCESS: Updating coordinates from text boxes - lat: {latitude}, lng: {longitude} ===")
+                        except (ValueError, TypeError) as e:
+                            print(f"=== ERROR: Invalid coordinates in text boxes - lat: '{lat_str}', lng: '{lng_str}', error: {e} ===")
+                            latitude = None
+                            longitude = None
+                    
+                    # Update activity coordinates
+                    a.latitude = latitude
+                    a.longitude = longitude
 
                     a.needs_chaperone = self.activity_needs_chaperone
 
