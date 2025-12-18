@@ -1,0 +1,16 @@
+*.db
+*.sqlite
+*.sqlite3
+app/data/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.reflex/
+.env
+.env.local
+*.log
+node_modules/
+.web/
+assets/
+.git/
